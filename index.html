@@ -43,7 +43,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gmail + Google Drive Инструменты</title>
-  <style>
+  <link rel="icon" type="image/x-icon" href="https://gmail24.netlify.app/icon.ico"> <style>
     * { box-sizing: border-box; }
 
     body {
@@ -175,7 +175,6 @@
     <button onclick="setLanguage('es')"><img src="https://flagcdn.com/w40/es.png" alt="ES">ES</button>
   </div>
 
-  <!-- Gmail Tool -->
   <div class="tool">
     <h2 id="gmailTitle">Вариации почты Gmail</h2>
     <input type="text" id="emailInput" placeholder="Введите Gmail адрес, например dokyt56fg78@gmail.com" oninput="validateEmail()">
@@ -190,7 +189,6 @@
     <textarea id="gmailOutput" placeholder="Здесь появятся варианты..." readonly></textarea>
   </div>
 
-  <!-- Google Drive Tool -->
   <div class="tool">
     <h2 id="driveTitle">Прямая ссылка Google Диска</h2>
     <input type="text" id="driveInput" placeholder="Вставьте ссылку на файл в Google Диске">
@@ -203,7 +201,6 @@
     <textarea id="driveOutput" placeholder="Прямая ссылка для скачивания" readonly></textarea>
   </div>
 
-  <!-- T.LY Shortener Tool -->
   <div class="tool">
     <h2 id="tlyTitle">Укорачивание ссылок через T.LY</h2>
     <input type="text" id="tlyInput" placeholder="Вставьте любую ссылку для укорачивания">
