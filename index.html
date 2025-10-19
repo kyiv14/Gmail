@@ -281,6 +281,7 @@
           <button onclick="convertDriveLink()" id="convertBtn">Преобразовать</button>
           <button onclick="copyDrive()" id="copyDriveBtn">Скопировать ссылку</button>
           <button onclick="goToDriveLink()" id="goToLinkBtn">Перейти по ссылке</button>
+          <button onclick="shortenDriveLink()" id="shortenLinkBtn">Укоротить ссылку</button> 
         </div>
         <textarea id="driveOutput" placeholder="Прямая ссылка для скачивания" readonly></textarea>
       </div>
@@ -347,18 +348,21 @@
         convertBtn: "Преобразовать",
         copyDriveBtn: "Скопировать ссылку",
         goToLinkBtn: "Перейти по ссылке",
+        shortenLinkBtn: "Укоротить ссылку", // ДОБАВЛЕНО
         emailCounter: "Вариаций: ",
         emailInputPlaceholder: "Введите Gmail адрес, например dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Здесь появятся варианты...",
         driveInputPlaceholder: "Вставьте ссылку на файл в Google Диске",
         driveOutputPlaceholder: "Прямая ссылка для скачивания",
-        copySuccess: "Скопировано!", // Изменено с "Скопировано!" на текст для уведомления
+        copySuccess: "Скопировано!",
         copyError: "Ошибка копирования: ",
         invalidEmailError: "Некорректный Gmail адрес",
         noGmailDataError: "Нет данных для сохранения.",
         noGmailExportError: "Нет данных для экспорта.",
         invalidDriveLinkError: "Не удалось извлечь ID файла. Проверьте правильность ссылки.",
         noDriveLinkError: "Нет ссылки для перехода. Сначала преобразуйте ссылку.",
+        noLinkToShortenError: "Нет ссылки для укорачивания. Сначала преобразуйте ссылку.", // ДОБАВЛЕНО
+        shortenLinkError: "Ошибка при укорачивании ссылки. Проверьте ссылку.", // ДОБАВЛЕНО
       },
       en: {
         gmailTitle: "Gmail Address Variations",
@@ -370,18 +374,21 @@
         convertBtn: "Convert",
         copyDriveBtn: "Copy Link",
         goToLinkBtn: "Go to Link",
+        shortenLinkBtn: "Shorten Link", // ДОБАВЛЕНО
         emailCounter: "Variations: ",
         emailInputPlaceholder: "Enter Gmail address, e.g., dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Variations will appear here...",
         driveInputPlaceholder: "Paste the Google Drive file link",
         driveOutputPlaceholder: "Direct download link",
-        copySuccess: "Copied!", // Изменено
+        copySuccess: "Copied!",
         copyError: "Copy error: ",
         invalidEmailError: "Invalid Gmail address",
         noGmailDataError: "No data to save.",
         noGmailExportError: "No data to export.",
         invalidDriveLinkError: "Failed to extract file ID. Check the link.",
         noDriveLinkError: "No link to navigate to. Convert the link first.",
+        noLinkToShortenError: "No link to shorten. Convert the link first.", // ДОБАВЛЕНО
+        shortenLinkError: "Error shortening link. Check the link.", // ДОБАВЛЕНО
       },
       es: {
         gmailTitle: "Variaciones de Gmail",
@@ -393,20 +400,23 @@
         convertBtn: "Convertir",
         copyDriveBtn: "Copiar enlace",
         goToLinkBtn: "Ir al enlace",
+        shortenLinkBtn: "Acortar enlace", // ДОБАВЛЕНО
         emailCounter: "Variaciones: ",
         emailInputPlaceholder: "Ingrese la dirección de Gmail, por ejemplo, dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Las variaciones aparecerán aquí...",
         driveInputPlaceholder: "Pegue el enlace del archivo de Google Drive",
         driveOutputPlaceholder: "Enlace de descarga directa",
-        copySuccess: "¡Copiado!", // Изменено
+        copySuccess: "¡Copiado!", 
         copyError: "Error al copiar: ",
         invalidEmailError: "Dirección de Gmail no válida",
         noGmailDataError: "No hay datos para guardar.",
         noGmailExportError: "No hay datos para exportar.",
         invalidDriveLinkError: "No se pudo extraer el ID del archivo. Verifique el enlace.",
         noDriveLinkError: "No hay enlace para navegar. Convierta el enlace primero.",
+        noLinkToShortenError: "No hay enlace para acortar. Convierta el enlace primero.", // ДОБАВЛЕНО
+        shortenLinkError: "Error al acortar el enlace. Verifique el enlace.", // ДОБАВЛЕНО
       },
-      uk: { // Новый украинский язык
+      uk: { 
         gmailTitle: "Варіації пошти Gmail",
         generateBtn: "Згенерувати",
         copyBtn: "Скопіювати все",
@@ -416,27 +426,37 @@
         convertBtn: "Перетворити",
         copyDriveBtn: "Скопіювати посилання",
         goToLinkBtn: "Перейти за посиланням",
+        shortenLinkBtn: "Скоротити посилання", // ДОБАВЛЕНО
         emailCounter: "Варіацій: ",
         emailInputPlaceholder: "Введіть адресу Gmail, наприклад dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Тут з'являться варіанти...",
         driveInputPlaceholder: "Вставте посилання на файл у Google Диску",
         driveOutputPlaceholder: "Пряме посилання для завантаження",
-        copySuccess: "Скопійовано!", // Изменено
+        copySuccess: "Скопійовано!", 
         copyError: "Помилка копіювання: ",
         invalidEmailError: "Некоректна адреса Gmail",
         noGmailDataError: "Немає даних для збереження.",
         noGmailExportError: "Немає даних для експорту.",
         invalidDriveLinkError: "Не вдалося витягти ID файлу. Перевірте правильність посилання.",
         noDriveLinkError: "Немає посилання для переходу. Спершу перетворіть посилання.",
+        noLinkToShortenError: "Немає посилання для скорочення. Спершу перетворіть посилання.", // ДОБАВЛЕНО
+        shortenLinkError: "Помилка при скороченні посилання. Перевірте посилання.", // ДОБАВЛЕНО
       }
     };
 
+    let toastTimer;
+
     // ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ УВЕДОМЛЕНИЯ
     function showToast(message) {
+        // Очищаем предыдущий таймер, если он есть
+        clearTimeout(toastTimer);
         const toast = document.getElementById("toastNotification");
         toast.innerText = message;
         toast.className = "show";
-        setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        // Запускаем новый таймер для скрытия
+        toastTimer = setTimeout(function(){ 
+          toast.className = toast.className.replace("show", ""); 
+        }, 3000);
     }
 
 
@@ -452,19 +472,17 @@
       document.getElementById("convertBtn").innerText = t.convertBtn;
       document.getElementById("copyDriveBtn").innerText = t.copyDriveBtn;
       document.getElementById("goToLinkBtn").innerText = t.goToLinkBtn;
-      // document.getElementById("shortenLinkBtn").innerText = t.shortenLinkBtn; // Удалено
+      document.getElementById("shortenLinkBtn").innerText = t.shortenLinkBtn; // ОБНОВЛЕНО
       const currentCount = document.getElementById("gmailOutput").value.split('\n').filter(Boolean).length;
       document.getElementById("emailCounter").innerText = t.emailCounter + currentCount;
       document.getElementById("emailInput").placeholder = t.emailInputPlaceholder;
       document.getElementById("gmailOutput").placeholder = t.gmailOutputPlaceholder;
       document.getElementById("driveInput").placeholder = t.driveInputPlaceholder;
       document.getElementById("driveOutput").placeholder = t.driveOutputPlaceholder;
-      // Обновление текста уведомления
       document.getElementById("toastNotification").innerText = t.copySuccess; 
     }
     
     document.addEventListener('DOMContentLoaded', () => {
-        // Установка украинского языка по умолчанию
         setLanguage('uk');
     });
 
@@ -473,10 +491,8 @@
       const t = translations[lang];
       try {
         await navigator.clipboard.writeText(text);
-        // ЗАМЕНА: alert() на showToast()
         showToast(t.copySuccess); 
       } catch (err) {
-        // Ошибка остаётся как alert()
         alert(t.copyError + err);
       }
     }
@@ -488,7 +504,6 @@
       const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       const localPart = email.split("@")[0];
-      // Updated regex to handle the dot rule correctly based on Gmail's behavior (dots don't matter, but we check for general validity)
       const isValid = /^[a-zA-Z0-9]+(\.?[a-zA-Z0-9]+)*@gmail\.com$/.test(email) && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
       
       if (email && !isValid) {
@@ -518,7 +533,7 @@
         return;
       }
 
-      const local = email.split("@")[0].replace(/\./g, ''); // Remove all existing dots
+      const local = email.split("@")[0].replace(/\./g, ''); 
       const variations = new Set();
       const positions = [];
 
@@ -537,7 +552,6 @@
         parts.push(local.slice(last));
         const dotted = parts.join(".");
         
-        // This final check ensures we don't accidentally create something invalid if the generation logic was flawed
         if (/^(?!\.).*(?<!\.)$/.test(dotted) && !dotted.includes("..")) {
           variations.add(dotted + "@gmail.com");
           variations.add(dotted + "@googlemail.com");
@@ -626,10 +640,49 @@
         alert(t.noDriveLinkError);
       }
     }
+    
+    // НОВАЯ/ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ УКОРАЧИВАНИЯ ССЫЛКИ С ИСПОЛЬЗОВАНИЕМ is.gd
+    async function shortenLink(longUrl, outputElementId) {
+      const output = document.getElementById(outputElementId);
+      const lang = document.documentElement.lang || 'uk';
+      const t = translations[lang];
+      
+      if (!longUrl) {
+          alert(t.noLinkToShortenError);
+          return;
+      }
+      
+      const apiEndpoint = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`;
 
-    // T.LY API key and functions are removed, but the original logic for shortening is kept in case the user changes their mind.
-    const TLY_API_KEY = "Bearer RUqLv6yD7jSQIzEpmFjwTW9l440Q2H6LbTKuTq6J9cY0ZPwaTUw2tbcgLmeC";
-    const TLY_API_URL = "https://t.ly/api/v1/link/shorten";
+      try {
+        const response = await fetch(apiEndpoint);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.shorturl) {
+          output.value = data.shorturl;
+          showToast(t.copySuccess); // Показываем уведомление об успешном укорачивании
+        } else if (data.error) {
+          // Обработка ошибок, возвращаемых is.gd (например, 'Please enter a valid URL')
+          throw new Error(data.error);
+        } else {
+          // Неизвестная ошибка
+          throw new Error("Неизвестный ответ от сервиса укорачивания.");
+        }
+      } catch (error) {
+        // Показываем стандартное сообщение об ошибке, если API недоступен или вернул ошибку
+        alert(`${t.shortenLinkError} ${error.message || ""}`); 
+      }
+    }
+    
+    // ФУНКЦИЯ, ВЫЗЫВАЕМАЯ КНОПКОЙ "Укоротить ссылку"
+    async function shortenDriveLink() {
+      const link = document.getElementById("driveOutput").value.trim();
+      await shortenLink(link, "driveOutput");
+    }
     
   </script>
 </body>
