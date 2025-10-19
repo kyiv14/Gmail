@@ -31,7 +31,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
+      min-height: 10vh;
       line-height: 1.5;
     }
 
@@ -288,7 +288,7 @@
       
       <div class="tool">
         <h2 id="gmailTitle">Вариации почты Gmail</h2>
-        <input type="text" id="emailInput" placeholder="Введите Gmail адрес, например dokyt56fg78@gmail.com" oninput="validateEmail()">
+        <input type="text" id="emailInput" placeholder="Введите Gmail логин или адрес, например dokyt56fg78" oninput="validateEmail()">
         <div id="emailError" class="error-message" style="display:none"></div>
         <div id="emailCounter" class="email-counter">Вариаций: 0</div>
         <div class="button-row">
@@ -350,13 +350,13 @@
         goToLinkBtn: "Перейти по ссылке",
         shortenLinkBtn: "Укоротить ссылку", // ДОБАВЛЕНО
         emailCounter: "Вариаций: ",
-        emailInputPlaceholder: "Введите Gmail адрес, например dokyt56fg78@gmail.com",
+        emailInputPlaceholder: "Введите Gmail логин или адрес, например dokyt56fg78",
         gmailOutputPlaceholder: "Здесь появятся варианты...",
         driveInputPlaceholder: "Вставьте ссылку на файл в Google Диске",
         driveOutputPlaceholder: "Прямая ссылка для скачивания",
         copySuccess: "Скопировано!",
         copyError: "Ошибка копирования: ",
-        invalidEmailError: "Некорректный Gmail адрес",
+        invalidEmailError: "Некорректный Gmail логин или адрес",
         noGmailDataError: "Нет данных для сохранения.",
         noGmailExportError: "Нет данных для экспорта.",
         invalidDriveLinkError: "Не удалось извлечь ID файла. Проверьте правильность ссылки.",
@@ -376,13 +376,13 @@
         goToLinkBtn: "Go to Link",
         shortenLinkBtn: "Shorten Link", // ДОБАВЛЕНО
         emailCounter: "Variations: ",
-        emailInputPlaceholder: "Enter Gmail address, e.g., dokyt56fg78@gmail.com",
+        emailInputPlaceholder: "Enter Gmail login or address, e.g., dokyt56fg78",
         gmailOutputPlaceholder: "Variations will appear here...",
         driveInputPlaceholder: "Paste the Google Drive file link",
         driveOutputPlaceholder: "Direct download link",
         copySuccess: "Copied!",
         copyError: "Copy error: ",
-        invalidEmailError: "Invalid Gmail address",
+        invalidEmailError: "Invalid Gmail login or address",
         noGmailDataError: "No data to save.",
         noGmailExportError: "No data to export.",
         invalidDriveLinkError: "Failed to extract file ID. Check the link.",
@@ -402,13 +402,13 @@
         goToLinkBtn: "Ir al enlace",
         shortenLinkBtn: "Acortar enlace", // ДОБАВЛЕНО
         emailCounter: "Variaciones: ",
-        emailInputPlaceholder: "Ingrese la dirección de Gmail, por ejemplo, dokyt56fg78@gmail.com",
+        emailInputPlaceholder: "Ingrese el login o dirección de Gmail, por ejemplo, dokyt56fg78",
         gmailOutputPlaceholder: "Las variaciones aparecerán aquí...",
         driveInputPlaceholder: "Pegue el enlace del archivo de Google Drive",
         driveOutputPlaceholder: "Enlace de descarga directa",
         copySuccess: "¡Copiado!", 
         copyError: "Error al copiar: ",
-        invalidEmailError: "Dirección de Gmail no válida",
+        invalidEmailError: "Login o dirección de Gmail no válida",
         noGmailDataError: "No hay datos para guardar.",
         noGmailExportError: "No hay datos para exportar.",
         invalidDriveLinkError: "No se pudo extraer el ID del archivo. Verifique el enlace.",
@@ -428,13 +428,13 @@
         goToLinkBtn: "Перейти за посиланням",
         shortenLinkBtn: "Скоротити посилання", // ДОБАВЛЕНО
         emailCounter: "Варіацій: ",
-        emailInputPlaceholder: "Введіть адресу Gmail, наприклад dokyt56fg78@gmail.com",
+        emailInputPlaceholder: "Введіть логін або адресу Gmail, наприклад dokyt56fg78",
         gmailOutputPlaceholder: "Тут з'являться варіанти...",
         driveInputPlaceholder: "Вставте посилання на файл у Google Диску",
         driveOutputPlaceholder: "Пряме посилання для завантаження",
         copySuccess: "Скопійовано!", 
         copyError: "Помилка копіювання: ",
-        invalidEmailError: "Некоректна адреса Gmail",
+        invalidEmailError: "Некоректний логін або адреса Gmail",
         noGmailDataError: "Немає даних для збереження.",
         noGmailExportError: "Немає даних для експорту.",
         invalidDriveLinkError: "Не вдалося витягти ID файлу. Перевірте правильність посилання.",
@@ -496,17 +496,49 @@
         alert(t.copyError + err);
       }
     }
-
+    
+    // --- ИЗМЕНЕННАЯ ФУНКЦИЯ validateEmail() ---
     function validateEmail() {
       const emailField = document.getElementById("emailInput");
       const errorField = document.getElementById("emailError");
-      const email = emailField.value.trim();
+      const input = emailField.value.trim().toLowerCase();
       const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
-      const localPart = email.split("@")[0];
-      const isValid = /^[a-zA-Z0-9]+(\.?[a-zA-Z0-9]+)*@gmail\.com$/.test(email) && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
       
-      if (email && !isValid) {
+      if (!input) {
+          emailField.classList.remove("invalid");
+          errorField.style.display = "none";
+          return;
+      }
+
+      // Если введен полный email, проверяем его.
+      // Если введен только логин (нет @), проверяем только логин.
+      const isFullEmail = input.includes('@');
+      let localPart;
+      
+      if (isFullEmail) {
+          // Проверяем формат полного адреса (user@gmail.com)
+          const fullEmailRegex = /^([a-z0-9]+(\.?[a-z0-9]+)*)@(gmail|googlemail)\.com$/;
+          if (!fullEmailRegex.test(input)) {
+              localPart = ""; // Некорректный адрес
+          } else {
+              localPart = input.split("@")[0];
+          }
+      } else {
+          // Проверяем формат логина (только a-z, 0-9 и точка)
+          const loginRegex = /^[a-z0-9]+(\.?[a-z0-9]+)*$/;
+          if (!loginRegex.test(input)) {
+              localPart = ""; // Некорректный логин
+          } else {
+              localPart = input;
+          }
+      }
+
+      // Дополнительные правила Gmail: не начинается/заканчивается точкой, нет двойных точек.
+      const isValidLocalPart = localPart && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
+      const isValid = isFullEmail ? (localPart && isValidLocalPart) : (localPart && isValidLocalPart);
+      
+      if (!isValid) {
         emailField.classList.add("invalid");
         errorField.style.display = "block";
         errorField.innerText = t.invalidEmailError;
@@ -515,17 +547,27 @@
         errorField.style.display = "none";
       }
     }
+    // --- КОНЕЦ ИЗМЕНЕННОЙ ФУНКЦИИ validateEmail() ---
 
+    // --- ИЗМЕНЕННАЯ ФУНКЦИЯ generateGmailVariations() ---
     function generateGmailVariations() {
-      const email = document.getElementById("emailInput").value.trim().toLowerCase();
+      let email = document.getElementById("emailInput").value.trim().toLowerCase();
       const output = document.getElementById("gmailOutput");
       const counter = document.getElementById("emailCounter");
       const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       output.value = "";
       
+      // Автоматически добавляем @gmail.com, если это только логин
+      if (email && !email.includes('@')) {
+          email = email + "@gmail.com";
+      }
+      
       const localPart = email.split("@")[0];
-      const isValid = /^[a-zA-Z0-9]+(\.?[a-zA-Z0-9]+)*@gmail\.com$/.test(email) && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
+      
+      // Повторная валидация, но уже с полным адресом (на случай, если пользователь ввел логин)
+      const fullEmailRegex = /^([a-z0-9]+(\.?[a-z0-9]+)*)@(gmail|googlemail)\.com$/;
+      const isValid = fullEmailRegex.test(email) && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
       
       if (!isValid) {
         validateEmail();
@@ -552,6 +594,7 @@
         parts.push(local.slice(last));
         const dotted = parts.join(".");
         
+        // Повторная проверка правил точек (должно быть лишним после проверки выше, но для надежности)
         if (/^(?!\.).*(?<!\.)$/.test(dotted) && !dotted.includes("..")) {
           variations.add(dotted + "@gmail.com");
           variations.add(dotted + "@googlemail.com");
@@ -562,6 +605,7 @@
       output.value = variationList.join("\n");
       counter.innerText = t.emailCounter + variationList.length;
     }
+    // --- КОНЕЦ ИЗМЕНЕННОЙ ФУНКЦИИ generateGmailVariations() ---
 
     function copyGmail() {
       const text = document.getElementById("gmailOutput").value;
