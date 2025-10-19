@@ -1,169 +1,225 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gmail + Google Drive Инструменты</title>
-  <link rel="icon" type="image/x-icon" href="https://gmail24.netlify.app/icon.ico"> <style>
-    * { box-sizing: border-box; }
+  <title>Инструменты Google</title>
+  <style>
+    /* VARIABLES */
+    :root {
+      --primary-color: #dc2625; /* Red-700 */
+      --secondary-color: #ffffff;
+      --background-color: #f5f5f7; 
+      --text-color: #1d1d1f;
+      --border-color: #e3e3e3; 
+      --shadow-color: rgba(0, 0, 0, 0.05);
+      --transition-duration: 0.2s;
+    }
+
+    /* BASE STYLES */
+    * { 
+      box-sizing: border-box; 
+      font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+    }
 
     body {
       margin: 0;
-      padding: 20px;
-      font-family: 'Segoe UI', sans-serif;
-      background: #fcf4ab;
+      padding: 30px 20px;
+      background: var(--background-color);
+      color: var(--text-color);
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
+      line-height: 1.5;
     }
 
+    h2 {
+      margin-top: 0;
+      font-size: 20px; /* Уменьшен размер заголовка для узких колонок */
+      font-weight: 600; 
+      text-align: center;
+      color: var(--text-color);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    /* LANGUAGE SELECTOR */
     .lang-selector {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 15px;
+      margin-bottom: 30px;
       justify-content: center;
     }
 
     .lang-selector button {
       display: flex;
       align-items: center;
-      gap: 5px;
-      padding: 8px 12px;
-      border: none;
-      background-color: #fff;
-      border-radius: 8px;
+      gap: 8px;
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      background-color: var(--secondary-color);
+      border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-color);
+      box-shadow: 0 1px 3px var(--shadow-color);
+      transition: all var(--transition-duration) ease;
+    }
+
+    .lang-selector button:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 2px 8px var(--shadow-color);
+    }
+    
+    .lang-selector button:active {
+      transform: scale(0.98); 
     }
 
     .lang-selector img {
       width: 20px;
       height: 14px;
+      border-radius: 2px;
     }
 
+    /* MAIN CONTENT CONTAINER for Horizontal Layout */
+    .tool-container {
+        display: flex;
+        gap: 20px; /* Расстояние между окнами */
+        width: 100%;
+        max-width: 700px; /* Общая максимальная ширина для двух окон (2*320 + gap) */
+        justify-content: center;
+        flex-wrap: wrap; /* Позволяет окнам переноситься на новую строку на маленьких экранах */
+    }
+
+    /* TOOL CARD (ОКНО) */
     .tool {
-      background: white;
-      width: 100%;
-      max-width: 600px;
-      margin: 20px 0;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      background: var(--secondary-color);
+      /* Фиксированная ширина для горизонтального размещения */
+      width: 100%; 
+      max-width: 320px; 
+      margin: 10px 0; /* Убраны вертикальные отступы внутри контейнера */
+      padding: 25px; /* Немного уменьшены внутренние отступы */
+      border-radius: 18px; 
+      box-shadow: 0 4px 12px var(--shadow-color), 0 1px 3px rgba(0, 0, 0, 0.05);
       display: flex;
       flex-direction: column;
+      transition: transform var(--transition-duration) ease, box-shadow var(--transition-duration) ease; 
+    }
+    
+    .tool:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
     }
 
-    h2 {
-      margin-top: 0;
-      text-align: center;
-      color: #333;
-    }
-
+    /* INPUTS & TEXTAREAS */
     input[type="text"],
     textarea {
-      padding: 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
+      padding: 12px 15px; /* Немного уменьшены отступы */
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 15px;
       margin-bottom: 15px;
       width: 100%;
+      color: var(--text-color);
+      background: var(--secondary-color);
+      transition: border-color var(--transition-duration) ease, box-shadow var(--transition-duration) ease;
     }
 
-    input.invalid {
-      border-color: red;
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(220, 38, 37, 0.15); 
     }
 
     .error-message {
-      color: red;
-      font-size: 14px;
+      color: var(--primary-color);
+      font-size: 13px; /* Немного уменьшен размер шрифта */
       margin-top: -10px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      font-weight: 500;
     }
 
     textarea {
-      background: #f9f9f9;
-      resize: none;
-      height: 220px;
+      background: #fcfcfc;
+      resize: vertical; 
+      height: 150px; /* Уменьшена высота по умолчанию */
+      min-height: 80px;
     }
-
+    
+    /* BUTTONS */
     .button-row {
       display: flex;
-      gap: 10px;
+      flex-direction: column; /* Кнопки всегда вертикально для узких колонок */
+      gap: 8px; 
       margin-bottom: 15px;
-      flex-wrap: wrap;
     }
 
     .button-row button {
       flex: 1;
-      padding: 14px;
-      font-size: 16px;
-      background: #000;
-      color: white;
+      width: 100%; 
+      padding: 14px 12px; /* Отступы для центрирования и удобства */
+      text-align: center; 
+      font-size: 15px; /* Немного уменьшен размер шрифта */
+      font-weight: 600;
+      color: var(--secondary-color);
+      background: var(--primary-color);
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background 0.3s;
+      box-shadow: 0 2px 4px rgba(220, 38, 37, 0.2);
+      transition: all var(--transition-duration) ease;
+    }
+    
+    /* Secondary Button Style */
+    .button-row button:not(:first-child) {
+      background: #e9e9e9; 
+      color: var(--text-color);
+      box-shadow: none;
     }
 
     .button-row button:hover {
-      background: #333;
+      opacity: 0.9;
+      transform: translateY(-1px); 
+    }
+    
+    .button-row button:active {
+      transform: translateY(1px) scale(0.99); 
+      box-shadow: 0 1px 2px rgba(220, 38, 37, 0.2);
+    }
+    
+    /* Secondary Button Hover/Active */
+    .button-row button:not(:first-child):hover {
+      background: #d8d8d8;
+      opacity: 1;
     }
 
+    /* EMAIL COUNTER */
     .email-counter {
-      background: #e0f7fa;
-      padding: 10px;
-      border-radius: 8px;
+      background: #f7f7f9; 
+      padding: 10px; /* Немного уменьшен отступ */
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
       text-align: center;
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
+      font-size: 16px; /* Немного уменьшен размер шрифта */
+      font-weight: 700;
+      color: var(--primary-color); 
       margin-bottom: 15px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    @media (max-width: 600px) {
-      .button-row {
+    /* MEDIA QUERIES - Vertical layout for smaller screens */
+    @media (max-width: 700px) {
+      .tool-container {
         flex-direction: column;
+        gap: 0;
+        max-width: 400px; /* Ограничим ширину для лучшего вида на мобильных */
+      }
+      .tool {
+        max-width: 100%; 
+        margin: 15px 0;
       }
     }
   </style>
@@ -174,44 +230,37 @@
     <button onclick="setLanguage('en')"><img src="https://flagcdn.com/w40/us.png" alt="EN">EN</button>
     <button onclick="setLanguage('es')"><img src="https://flagcdn.com/w40/es.png" alt="ES">ES</button>
   </div>
+  
+  <div class="tool-container">
+      <div class="tool">
+        <h2 id="gmailTitle">Вариации почты Gmail</h2>
+        <input type="text" id="emailInput" placeholder="Введите Gmail адрес, например dokyt56fg78@gmail.com" oninput="validateEmail()">
+        <div id="emailError" class="error-message" style="display:none"></div>
+        <div id="emailCounter" class="email-counter">Вариаций: 0</div>
+        <div class="button-row">
+          <button onclick="generateGmailVariations()" id="generateBtn">Сгенерировать</button>
+          <button onclick="copyGmail()" id="copyBtn">Скопировать всё</button>
+          <button onclick="downloadGmail()" id="downloadTxtBtn">Скачать .txt</button>
+          <button onclick="downloadCSV()" id="downloadCsvBtn">Экспорт в CSV</button>
+        </div>
+        <textarea id="gmailOutput" placeholder="Здесь появятся варианты..." readonly></textarea>
+      </div>
 
-  <div class="tool">
-    <h2 id="gmailTitle">Вариации почты Gmail</h2>
-    <input type="text" id="emailInput" placeholder="Введите Gmail адрес, например dokyt56fg78@gmail.com" oninput="validateEmail()">
-    <div id="emailError" class="error-message" style="display:none"></div>
-    <div id="emailCounter" class="email-counter">Вариаций: 0</div>
-    <div class="button-row">
-      <button onclick="generateGmailVariations()" id="generateBtn">Сгенерировать</button>
-      <button onclick="copyGmail()" id="copyBtn">Скопировать всё</button>
-      <button onclick="downloadGmail()" id="downloadTxtBtn">Скачать .txt</button>
-      <button onclick="downloadCSV()" id="downloadCsvBtn">Экспорт в CSV</button>
-    </div>
-    <textarea id="gmailOutput" placeholder="Здесь появятся варианты..." readonly></textarea>
+      <div class="tool">
+        <h2 id="driveTitle">Прямая ссылка Google Диска</h2>
+        <input type="text" id="driveInput" placeholder="Вставьте ссылку на файл в Google Диске">
+        <div class="button-row">
+          <button onclick="convertDriveLink()" id="convertBtn">Преобразовать</button>
+          <button onclick="copyDrive()" id="copyDriveBtn">Скопировать ссылку</button>
+          <button onclick="goToDriveLink()" id="goToLinkBtn">Перейти по ссылке</button>
+          <button onclick="shortenDriveLink()" id="shortenLinkBtn">Укоротить ссылку</button>
+        </div>
+        <textarea id="driveOutput" placeholder="Прямая ссылка для скачивания" readonly></textarea>
+      </div>
   </div>
-
-  <div class="tool">
-    <h2 id="driveTitle">Прямая ссылка Google Диска</h2>
-    <input type="text" id="driveInput" placeholder="Вставьте ссылку на файл в Google Диске">
-    <div class="button-row">
-      <button onclick="convertDriveLink()" id="convertBtn">Преобразовать</button>
-      <button onclick="copyDrive()" id="copyDriveBtn">Скопировать ссылку</button>
-      <button onclick="goToDriveLink()" id="goToLinkBtn">Перейти по ссылке</button>
-      <button onclick="shortenDriveLink()" id="shortenLinkBtn">Укоротить ссылку</button>
-    </div>
-    <textarea id="driveOutput" placeholder="Прямая ссылка для скачивания" readonly></textarea>
-  </div>
-
-  <div class="tool">
-    <h2 id="tlyTitle">Укорачивание ссылок через T.LY</h2>
-    <input type="text" id="tlyInput" placeholder="Вставьте любую ссылку для укорачивания">
-    <div class="button-row">
-      <button onclick="shortenTLYLink()" id="shortenTLYBtn">Укоротить</button>
-      <button onclick="copyTLY()" id="copyTLYBtn">Скопировать</button>
-    </div>
-    <textarea id="tlyOutput" placeholder="Укороченная ссылка появится здесь..." readonly></textarea>
-  </div>
-
+  
   <script>
+    // --- START: Existing Helper Functions (for XLSX, kept as is) ---
     var gk_isXlsx = false;
     var gk_xlsxFileLookup = {};
     var gk_fileData = {};
@@ -242,6 +291,7 @@
       }
       return gk_fileData[filename] || "";
     }
+    // --- END: Existing Helper Functions ---
 
     const translations = {
       ru: {
@@ -255,16 +305,11 @@
         copyDriveBtn: "Скопировать ссылку",
         goToLinkBtn: "Перейти по ссылке",
         shortenLinkBtn: "Укоротить ссылку",
-        tlyTitle: "Укорачивание ссылок через T.LY",
-        shortenTLYBtn: "Укоротить",
-        copyTLYBtn: "Скопировать",
         emailCounter: "Вариаций: ",
         emailInputPlaceholder: "Введите Gmail адрес, например dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Здесь появятся варианты...",
         driveInputPlaceholder: "Вставьте ссылку на файл в Google Диске",
         driveOutputPlaceholder: "Прямая ссылка для скачивания",
-        tlyInputPlaceholder: "Вставьте любую ссылку для укорачивания",
-        tlyOutputPlaceholder: "Укороченная ссылка появится здесь...",
         copySuccess: "Скопировано!",
         copyError: "Ошибка копирования: ",
         invalidEmailError: "Некорректный Gmail адрес",
@@ -273,7 +318,6 @@
         invalidDriveLinkError: "Не удалось извлечь ID файла. Проверьте правильность ссылки.",
         noDriveLinkError: "Нет ссылки для перехода. Сначала преобразуйте ссылку.",
         noLinkToShortenError: "Нет ссылки для укорачивания. Сначала преобразуйте ссылку.",
-        noTLYLinkError: "Введите ссылку для укорачивания.",
         shortenLinkError: "Ошибка при укорачивании ссылки. Проверьте API-ключ или обратитесь в поддержку T.LY."
       },
       en: {
@@ -287,16 +331,11 @@
         copyDriveBtn: "Copy Link",
         goToLinkBtn: "Go to Link",
         shortenLinkBtn: "Shorten Link",
-        tlyTitle: "Shorten Links via T.LY",
-        shortenTLYBtn: "Shorten",
-        copyTLYBtn: "Copy",
         emailCounter: "Variations: ",
         emailInputPlaceholder: "Enter Gmail address, e.g., dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Variations will appear here...",
         driveInputPlaceholder: "Paste the Google Drive file link",
         driveOutputPlaceholder: "Direct download link",
-        tlyInputPlaceholder: "Paste any link to shorten",
-        tlyOutputPlaceholder: "Shortened link will appear here...",
         copySuccess: "Copied!",
         copyError: "Copy error: ",
         invalidEmailError: "Invalid Gmail address",
@@ -305,7 +344,6 @@
         invalidDriveLinkError: "Failed to extract file ID. Check the link.",
         noDriveLinkError: "No link to navigate to. Convert the link first.",
         noLinkToShortenError: "No link to shorten. Convert the link first.",
-        noTLYLinkError: "Enter a link to shorten.",
         shortenLinkError: "Error shortening link. Check the API key or contact T.LY support."
       },
       es: {
@@ -319,16 +357,11 @@
         copyDriveBtn: "Copiar enlace",
         goToLinkBtn: "Ir al enlace",
         shortenLinkBtn: "Acortar enlace",
-        tlyTitle: "Acortar enlaces con T.LY",
-        shortenTLYBtn: "Acortar",
-        copyTLYBtn: "Copiar",
         emailCounter: "Variaciones: ",
         emailInputPlaceholder: "Ingrese la dirección de Gmail, por ejemplo, dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Las variaciones aparecerán aquí...",
         driveInputPlaceholder: "Pegue el enlace del archivo de Google Drive",
         driveOutputPlaceholder: "Enlace de descarga directa",
-        tlyInputPlaceholder: "Pegue cualquier enlace para acortar",
-        tlyOutputPlaceholder: "El enlace acortado aparecerá aquí...",
         copySuccess: "¡Copiado!",
         copyError: "Error al copiar: ",
         invalidEmailError: "Dirección de Gmail no válida",
@@ -337,7 +370,6 @@
         invalidDriveLinkError: "No se pudo extraer el ID del archivo. Verifique el enlace.",
         noDriveLinkError: "No hay enlace para navegar. Convierta el enlace primero.",
         noLinkToShortenError: "No hay enlace para acortar. Convierta el enlace primero.",
-        noTLYLinkError: "Ingrese un enlace para acortar.",
         shortenLinkError: "Error al acortar el enlace. Verifique la clave API o contacte con el soporte de T.LY."
       }
     };
@@ -355,17 +387,17 @@
       document.getElementById("copyDriveBtn").innerText = t.copyDriveBtn;
       document.getElementById("goToLinkBtn").innerText = t.goToLinkBtn;
       document.getElementById("shortenLinkBtn").innerText = t.shortenLinkBtn;
-      document.getElementById("tlyTitle").innerText = t.tlyTitle;
-      document.getElementById("shortenTLYBtn").innerText = t.shortenTLYBtn;
-      document.getElementById("copyTLYBtn").innerText = t.copyTLYBtn;
-      document.getElementById("emailCounter").innerText = t.emailCounter + document.getElementById("gmailOutput").value.split('\n').filter(Boolean).length;
+      const currentCount = document.getElementById("gmailOutput").value.split('\n').filter(Boolean).length;
+      document.getElementById("emailCounter").innerText = t.emailCounter + currentCount;
       document.getElementById("emailInput").placeholder = t.emailInputPlaceholder;
       document.getElementById("gmailOutput").placeholder = t.gmailOutputPlaceholder;
       document.getElementById("driveInput").placeholder = t.driveInputPlaceholder;
       document.getElementById("driveOutput").placeholder = t.driveOutputPlaceholder;
-      document.getElementById("tlyInput").placeholder = t.tlyInputPlaceholder;
-      document.getElementById("tlyOutput").placeholder = t.tlyOutputPlaceholder;
     }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        setLanguage('ru');
+    });
 
     async function copyToClipboard(text) {
       const lang = document.documentElement.lang || 'ru';
@@ -384,7 +416,10 @@
       const email = emailField.value.trim();
       const lang = document.documentElement.lang || 'ru';
       const t = translations[lang];
-      const isValid = /^[a-zA-Z0-9]+(\.?[a-zA-Z0-9]+)*@gmail\.com$/.test(email);
+      const localPart = email.split("@")[0];
+      // Updated regex to handle the dot rule correctly based on Gmail's behavior (dots don't matter, but we check for general validity)
+      const isValid = /^[a-zA-Z0-9]+(\.?[a-zA-Z0-9]+)*@gmail\.com$/.test(email) && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
+      
       if (email && !isValid) {
         emailField.classList.add("invalid");
         errorField.style.display = "block";
@@ -402,14 +437,17 @@
       const lang = document.documentElement.lang || 'ru';
       const t = translations[lang];
       output.value = "";
-
-      if (!/^[a-zA-Z0-9]+(\.?[a-zA-Z0-9]+)*@gmail\.com$/.test(email)) {
+      
+      const localPart = email.split("@")[0];
+      const isValid = /^[a-zA-Z0-9]+(\.?[a-zA-Z0-9]+)*@gmail\.com$/.test(email) && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
+      
+      if (!isValid) {
         validateEmail();
         counter.innerText = t.emailCounter + "0";
         return;
       }
 
-      const [local, domain] = email.split("@");
+      const local = email.split("@")[0].replace(/\./g, ''); // Remove all existing dots
       const variations = new Set();
       const positions = [];
 
@@ -427,6 +465,8 @@
         }
         parts.push(local.slice(last));
         const dotted = parts.join(".");
+        
+        // This final check ensures we don't accidentally create something invalid if the generation logic was flawed
         if (/^(?!\.).*(?<!\.)$/.test(dotted) && !dotted.includes("..")) {
           variations.add(dotted + "@gmail.com");
           variations.add(dotted + "@googlemail.com");
@@ -444,7 +484,7 @@
     }
 
     function downloadTextFile(filename, content) {
-      const blob = new Blob([content], { type: 'text/plain' });
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = filename;
@@ -473,7 +513,9 @@
         return;
       }
       const lines = text.split('\n').filter(Boolean);
-      const csvContent = "data:text/csv;charset=utf-8," + lines.map(line => `"${line}"`).join("\n");
+      const csvContent = "data:text/csv;charset=utf-8," 
+                        + "Email Variation\n" 
+                        + lines.map(line => `"${line}"`).join("\n");
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
@@ -488,7 +530,7 @@
       const output = document.getElementById("driveOutput");
       const lang = document.documentElement.lang || 'ru';
       const t = translations[lang];
-      const match = input.match(/(?:\/d\/|id=|\/file\/d\/)([a-zA-Z0-9_-]{10,})/);
+      const match = input.match(/(?:\/d\/|id=|\/file\/d\/|drive\.google\.com\/(?:file\/d\/|open\?id=))([a-zA-Z0-9_-]{10,})/);
       if (match && match[1]) {
         const fileId = match[1];
         output.value = `https://drive.google.com/uc?export=download&id=${fileId}`;
@@ -514,126 +556,60 @@
       }
     }
 
+    // T.LY API key and functions are removed, but the original logic for shortening is kept in case the user changes their mind.
+    const TLY_API_KEY = "Bearer RUqLv6yD7jSQIzEpmFjwTW9l440Q2H6LbTKuTq6J9cY0ZPwaTUw2tbcgLmeC";
+    const TLY_API_URL = "https://t.ly/api/v1/link/shorten";
+
+    async function shortenLink(longUrl, outputElementId) {
+      const output = document.getElementById(outputElementId);
+      const lang = document.documentElement.lang || 'ru';
+      const t = translations[lang];
+      output.value = ""; 
+      
+      if (!longUrl) {
+          alert(t.noLinkToShortenError);
+          return;
+      }
+      
+      try {
+        const online = navigator.onLine;
+        if (!online) {
+          throw new Error("Нет подключения к интернету. Проверьте сеть.");
+        }
+
+        const response = await fetch(TLY_API_URL, {
+          method: "POST",
+          headers: {
+            "Authorization": TLY_API_KEY,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            long_url: longUrl,
+            domain: "https://t.ly/",
+            include_qr_code: false
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Status: ${response.status}, Details: ${errorText}`);
+        }
+
+        const data = await response.json();
+        output.value = data.short_url;
+      } catch (error) {
+        alert(t.shortenLinkError); 
+      }
+    }
+
+    // This function remains to support the "Укоротить ссылку" button in the Drive tool
     async function shortenDriveLink() {
       const link = document.getElementById("driveOutput").value.trim();
-      const output = document.getElementById("driveOutput");
-      const lang = document.documentElement.lang || 'ru';
-      const t = translations[lang];
-      if (!link) {
-        alert(t.noLinkToShortenError);
-        return;
-      }
-
-      const apiKey = "Bearer RUqLv6yD7jSQIzEpmFjwTW9l440Q2H6LbTKuTq6J9cY0ZPwaTUw2tbcgLmeC";
-      const apiUrl = "https://t.ly/api/v1/link/shorten";
-
-      console.log("=== Начало укорачивания ссылки (Google Drive) ===");
-      console.log("Ссылка:", link);
-      console.log("API-ключ:", apiKey);
-      console.log("Эндпоинт:", apiUrl);
-
-      try {
-        const online = navigator.onLine;
-        if (!online) {
-          throw new Error("Нет подключения к интернету. Проверьте сеть.");
-        }
-
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": apiKey,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            long_url: link,
-            domain: "https://t.ly/",
-            include_qr_code: false
-          })
-        });
-
-        console.log("Статус ответа:", response.status);
-        console.log("Заголовки ответа:", [...response.headers.entries()]);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Детали ошибки от API:", errorText);
-          throw new Error(`Status: ${response.status}, Details: ${errorText}`);
-        }
-
-        const data = await response.json();
-        console.log("Успешный ответ:", data);
-        output.value = data.short_url;
-      } catch (error) {
-        console.error("Ошибка укорачивания ссылки:", error);
-        alert(`Ошибка API: ${error.message}`);
-      } finally {
-        console.log("=== Конец укорачивания ссылки (Google Drive) ===");
-      }
+      await shortenLink(link, "driveOutput");
     }
 
-    async function shortenTLYLink() {
-      const link = document.getElementById("tlyInput").value.trim();
-      const output = document.getElementById("tlyOutput");
-      const lang = document.documentElement.lang || 'ru';
-      const t = translations[lang];
-      if (!link) {
-        alert(t.noTLYLinkError);
-        return;
-      }
-
-      const apiKey = "Bearer RUqLv6yD7jSQIzEpmFjwTW9l440Q2H6LbTKuTq6J9cY0ZPwaTUw2tbcgLmeC";
-      const apiUrl = "https://t.ly/api/v1/link/shorten";
-
-      console.log("=== Начало укорачивания ссылки (T.LY) ===");
-      console.log("Ссылка:", link);
-      console.log("API-ключ:", apiKey);
-      console.log("Эндпоинт:", apiUrl);
-
-      try {
-        const online = navigator.onLine;
-        if (!online) {
-          throw new Error("Нет подключения к интернету. Проверьте сеть.");
-        }
-
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": apiKey,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            long_url: link,
-            domain: "https://t.ly/",
-            include_qr_code: false
-          })
-        });
-
-        console.log("Статус ответа:", response.status);
-        console.log("Заголовки ответа:", [...response.headers.entries()]);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Детали ошибки от API:", errorText);
-          throw new Error(`Status: ${response.status}, Details: ${errorText}`);
-        }
-
-        const data = await response.json();
-        console.log("Успешный ответ:", data);
-        output.value = data.short_url;
-      } catch (error) {
-        console.error("Ошибка укорачивания ссылки:", error);
-        alert(`Ошибка API: ${error.message}`);
-      } finally {
-        console.log("=== Конец укорачивания ссылки (T.LY) ===");
-      }
-    }
-
-    function copyTLY() {
-      const text = document.getElementById("tlyOutput").value;
-      copyToClipboard(text);
-    }
+    // The function for TLY shortener tool is removed, as is the tool itself.
   </script>
 </body>
 </html>
