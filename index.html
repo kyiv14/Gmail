@@ -90,7 +90,7 @@
         display: flex;
         gap: 20px; /* Расстояние между окнами */
         width: 100%;
-        max-width: 700px; /* Общая максимальная ширина для двух окон (2*320 + gap) */
+        max-width: 1040px; /* Общая максимальная ширина для трех окон (3*320 + 2*gap) */
         justify-content: center;
         flex-wrap: wrap; /* Позволяет окнам переноситься на новую строку на маленьких экранах */
     }
@@ -117,7 +117,8 @@
 
     /* INPUTS & TEXTAREAS */
     input[type="text"],
-    textarea {
+    textarea,
+    input[type="number"] { /* Добавлен стили для input type="number" */
       padding: 12px 15px; /* Немного уменьшены отступы */
       border: 1px solid var(--border-color);
       border-radius: 10px;
@@ -128,9 +129,16 @@
       background: var(--secondary-color);
       transition: border-color var(--transition-duration) ease, box-shadow var(--transition-duration) ease;
     }
+    
+    /* Стилизация для поля ввода количества логинов */
+    #countInput {
+        text-align: center;
+    }
+
 
     input[type="text"]:focus,
-    textarea:focus {
+    textarea:focus,
+    input[type="number"]:focus { /* Добавлен стили для input type="number" */
       border-color: var(--primary-color);
       outline: none;
       box-shadow: 0 0 0 3px rgba(220, 38, 37, 0.15); 
@@ -181,7 +189,20 @@
       color: var(--text-color);
       box-shadow: none;
     }
-
+    
+    /* Стили для кнопок, которые не являются первой в ряду (для генератора логинов) */
+    .tool:last-child .button-row button:first-child { 
+        background: var(--primary-color);
+        color: var(--secondary-color);
+    }
+    
+    /* Стили для кнопок, которые не являются первой в ряду */
+    .tool:last-child .button-row button:not(:first-child) { 
+        background: #e9e9e9;
+        color: var(--text-color);
+    }
+    
+    
     .button-row button:hover {
       opacity: 0.9;
       transform: translateY(-1px); 
@@ -197,6 +218,11 @@
       background: #d8d8d8;
       opacity: 1;
     }
+    
+    .tool:last-child .button-row button:not(:first-child):hover {
+        background: #d8d8d8;
+    }
+    
 
     /* EMAIL COUNTER */
     .email-counter {
@@ -209,6 +235,14 @@
       font-weight: 700;
       color: var(--primary-color); 
       margin-bottom: 15px;
+    }
+    
+    /* LABEL STYLE */
+    .input-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-color);
+        margin-bottom: 5px;
     }
 
     /* TOAST NOTIFICATION STYLES */
@@ -252,7 +286,13 @@
     }
 
     /* MEDIA QUERIES - Vertical layout for smaller screens */
-    @media (max-width: 700px) {
+    @media (max-width: 1060px) { /* Изменено с 700px для 3 колонок */
+        .tool-container {
+            max-width: 700px; /* 2 колонки */
+        }
+    }
+    
+    @media (max-width: 740px) { /* Для 1 колонки */
       .tool-container {
         flex-direction: column;
         gap: 0;
@@ -287,7 +327,7 @@
       </div>
       
       <div class="tool">
-        <h2 id="gmailTitle">Вариации почты Gmail</h2>
+        <h2 id="gmailTitle">Варіації пошти Gmail</h2>
         <input type="text" id="emailInput" placeholder="Введите Gmail логин или адрес, например dokyt56fg78" oninput="validateEmail()">
         <div id="emailError" class="error-message" style="display:none"></div>
         <div id="emailCounter" class="email-counter">Вариаций: 0</div>
@@ -299,7 +339,24 @@
         </div>
         <textarea id="gmailOutput" placeholder="Здесь появятся варианты..." readonly></textarea>
       </div>
-  </div>
+      
+      <div class="tool">
+        <h2 id="loginGenTitle">Генератор логінів Gmail</h2>
+        <div class="input-label" id="countLabel">Кількість (1-50):</div>
+        <input type="number" id="countInput" value="10" min="1" max="50" oninput="validateCountInput()">
+        <div id="loginCountError" class="error-message" style="display:none"></div>
+        
+        <div class="input-label" id="lengthLabel">Длина логина (6-20):</div>
+        <input type="number" id="lengthInput" value="10" min="6" max="20" oninput="validateLengthInput()">
+        <div id="loginLengthError" class="error-message" style="display:none"></div>
+        
+        <div class="button-row">
+          <button onclick="generateWordBasedLogins()" id="generateLoginBtn">Сгенерировать</button>
+          <button onclick="copyLogins()" id="copyLoginsBtn">Скопировать всё</button>
+        </div>
+        <textarea id="loginOutput" placeholder="Здесь появятся короткие логины..." readonly></textarea>
+      </div>
+      </div>
   
   <div id="toastNotification">Скопировано!</div>
 
@@ -348,7 +405,7 @@
         convertBtn: "Преобразовать",
         copyDriveBtn: "Скопировать ссылку",
         goToLinkBtn: "Перейти по ссылке",
-        shortenLinkBtn: "Укоротить ссылку", // ДОБАВЛЕНО
+        shortenLinkBtn: "Укоротить ссылку", 
         emailCounter: "Вариаций: ",
         emailInputPlaceholder: "Введите Gmail логин или адрес, например dokyt56fg78",
         gmailOutputPlaceholder: "Здесь появятся варианты...",
@@ -361,8 +418,18 @@
         noGmailExportError: "Нет данных для экспорта.",
         invalidDriveLinkError: "Не удалось извлечь ID файла. Проверьте правильность ссылки.",
         noDriveLinkError: "Нет ссылки для перехода. Сначала преобразуйте ссылку.",
-        noLinkToShortenError: "Нет ссылки для укорачивания. Сначала преобразуйте ссылку.", // ДОБАВЛЕНО
-        shortenLinkError: "Ошибка при укорачивании ссылки. Проверьте ссылку.", // ДОБАВЛЕНО
+        noLinkToShortenError: "Нет ссылки для укорачивания. Сначала преобразуйте ссылку.", 
+        shortenLinkError: "Ошибка при укорачивании ссылки. Проверьте ссылку.", 
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+        loginGenTitle: "Генератор логинов Gmail",
+        countLabel: "Количество (1-50):",
+        lengthLabel: "Длина логина (6-20):", 
+        generateLoginBtn: "Сгенерировать",
+        copyLoginsBtn: "Скопировать всё",
+        loginOutputPlaceholder: "Здесь появятся короткие логины...",
+        invalidCountError: "Количество должно быть от 1 до 50.",
+        invalidLengthError: "Длина должна быть от 6 до 20 символов.", 
+        noLoginsToCopyError: "Нет сгенерированных логинов для копирования.",
       },
       en: {
         gmailTitle: "Gmail Address Variations",
@@ -374,7 +441,7 @@
         convertBtn: "Convert",
         copyDriveBtn: "Copy Link",
         goToLinkBtn: "Go to Link",
-        shortenLinkBtn: "Shorten Link", // ДОБАВЛЕНО
+        shortenLinkBtn: "Shorten Link", 
         emailCounter: "Variations: ",
         emailInputPlaceholder: "Enter Gmail login or address, e.g., dokyt56fg78",
         gmailOutputPlaceholder: "Variations will appear here...",
@@ -387,8 +454,18 @@
         noGmailExportError: "No data to export.",
         invalidDriveLinkError: "Failed to extract file ID. Check the link.",
         noDriveLinkError: "No link to navigate to. Convert the link first.",
-        noLinkToShortenError: "No link to shorten. Convert the link first.", // ДОБАВЛЕНО
-        shortenLinkError: "Error shortening link. Check the link.", // ДОБАВЛЕНО
+        noLinkToShortenError: "No link to shorten. Convert the link first.", 
+        shortenLinkError: "Error shortening link. Check the link.", 
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+        loginGenTitle: "Gmail Login Generator",
+        countLabel: "Count (1-50):",
+        lengthLabel: "Login Length (6-20):", 
+        generateLoginBtn: "Generate",
+        copyLoginsBtn: "Copy All",
+        loginOutputPlaceholder: "Short logins will appear here...",
+        invalidCountError: "Count must be between 1 and 50.",
+        invalidLengthError: "Length must be between 6 and 20 characters.", 
+        noLoginsToCopyError: "No generated logins to copy.",
       },
       es: {
         gmailTitle: "Variaciones de Gmail",
@@ -400,7 +477,7 @@
         convertBtn: "Convertir",
         copyDriveBtn: "Copiar enlace",
         goToLinkBtn: "Ir al enlace",
-        shortenLinkBtn: "Acortar enlace", // ДОБАВЛЕНО
+        shortenLinkBtn: "Acortar enlace", 
         emailCounter: "Variaciones: ",
         emailInputPlaceholder: "Ingrese el login o dirección de Gmail, por ejemplo, dokyt56fg78",
         gmailOutputPlaceholder: "Las variaciones aparecerán aquí...",
@@ -413,8 +490,18 @@
         noGmailExportError: "No hay datos para exportar.",
         invalidDriveLinkError: "No se pudo extraer el ID del archivo. Verifique el enlace.",
         noDriveLinkError: "No hay enlace para navegar. Convierta el enlace primero.",
-        noLinkToShortenError: "No hay enlace para acortar. Convierta el enlace primero.", // ДОБАВЛЕНО
-        shortenLinkError: "Error al acortar el enlace. Verifique el enlace.", // ДОБАВЛЕНО
+        noLinkToShortenError: "No hay enlace para acortar. Convierta el enlace primero.", 
+        shortenLinkError: "Error al acortar el enlace. Verifique el enlace.", 
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+        loginGenTitle: "Generador de Login de Gmail",
+        countLabel: "Cantidad (1-50):",
+        lengthLabel: "Longitud del Login (6-20):", 
+        generateLoginBtn: "Generar",
+        copyLoginsBtn: "Copiar todo",
+        loginOutputPlaceholder: "Los logins cortos aparecerán aquí...",
+        invalidCountError: "La cantidad debe estar entre 1 y 50.",
+        invalidLengthError: "La longitud debe ser entre 6 и 20 caracteres.", 
+        noLoginsToCopyError: "No hay logins generados para copiar.",
       },
       uk: { 
         gmailTitle: "Варіації пошти Gmail",
@@ -426,7 +513,7 @@
         convertBtn: "Перетворити",
         copyDriveBtn: "Скопіювати посилання",
         goToLinkBtn: "Перейти за посиланням",
-        shortenLinkBtn: "Скоротити посилання", // ДОБАВЛЕНО
+        shortenLinkBtn: "Скоротити посилання", 
         emailCounter: "Варіацій: ",
         emailInputPlaceholder: "Введіть логін або адресу Gmail, наприклад dokyt56fg78",
         gmailOutputPlaceholder: "Тут з'являться варіанти...",
@@ -439,8 +526,18 @@
         noGmailExportError: "Немає даних для експорту.",
         invalidDriveLinkError: "Не вдалося витягти ID файлу. Перевірте правильність посилання.",
         noDriveLinkError: "Немає посилання для переходу. Спершу перетворіть посилання.",
-        noLinkToShortenError: "Немає посилання для скорочення. Спершу перетворіть посилання.", // ДОБАВЛЕНО
-        shortenLinkError: "Помилка при скороченні посилання. Перевірте посилання.", // ДОБАВЛЕНО
+        noLinkToShortenError: "Немає посилання для скорочення. Спершу перетворіть посилання.", 
+        shortenLinkError: "Помилка при скороченні посилання. Перевірте посилання.",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+        loginGenTitle: "Генератор логінів Gmail",
+        countLabel: "Кількість (1-50):",
+        lengthLabel: "Довжина логіна (6-20):", 
+        generateLoginBtn: "Згенерувати",
+        copyLoginsBtn: "Скопіювати все",
+        loginOutputPlaceholder: "Тут з'являться короткі логіни...",
+        invalidCountError: "Кількість має бути від 1 до 50.",
+        invalidLengthError: "Довжина має бути від 6 до 20 символів.", 
+        noLoginsToCopyError: "Немає згенерованих логінів для копіювання.",
       }
     };
 
@@ -472,7 +569,7 @@
       document.getElementById("convertBtn").innerText = t.convertBtn;
       document.getElementById("copyDriveBtn").innerText = t.copyDriveBtn;
       document.getElementById("goToLinkBtn").innerText = t.goToLinkBtn;
-      document.getElementById("shortenLinkBtn").innerText = t.shortenLinkBtn; // ОБНОВЛЕНО
+      document.getElementById("shortenLinkBtn").innerText = t.shortenLinkBtn; 
       const currentCount = document.getElementById("gmailOutput").value.split('\n').filter(Boolean).length;
       document.getElementById("emailCounter").innerText = t.emailCounter + currentCount;
       document.getElementById("emailInput").placeholder = t.emailInputPlaceholder;
@@ -480,6 +577,14 @@
       document.getElementById("driveInput").placeholder = t.driveInputPlaceholder;
       document.getElementById("driveOutput").placeholder = t.driveOutputPlaceholder;
       document.getElementById("toastNotification").innerText = t.copySuccess; 
+      
+      // ОБНОВЛЕНИЕ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+      document.getElementById("loginGenTitle").innerText = t.loginGenTitle;
+      document.getElementById("countLabel").innerText = t.countLabel;
+      document.getElementById("lengthLabel").innerText = t.lengthLabel;
+      document.getElementById("generateLoginBtn").innerText = t.generateLoginBtn;
+      document.getElementById("copyLoginsBtn").innerText = t.copyLoginsBtn;
+      document.getElementById("loginOutput").placeholder = t.loginOutputPlaceholder;
     }
     
     document.addEventListener('DOMContentLoaded', () => {
@@ -535,7 +640,8 @@
       }
 
       // Дополнительные правила Gmail: не начинается/заканчивается точкой, нет двойных точек.
-      const isValidLocalPart = localPart && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
+      // Также проверяем минимальную длину - 6 символов
+      const isValidLocalPart = localPart && localPart.length >= 6 && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
       const isValid = isFullEmail ? (localPart && isValidLocalPart) : (localPart && isValidLocalPart);
       
       if (!isValid) {
@@ -567,7 +673,7 @@
       
       // Повторная валидация, но уже с полным адресом (на случай, если пользователь ввел логин)
       const fullEmailRegex = /^([a-z0-9]+(\.?[a-z0-9]+)*)@(gmail|googlemail)\.com$/;
-      const isValid = fullEmailRegex.test(email) && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
+      const isValid = fullEmailRegex.test(email) && localPart.length >= 6 && /^(?!\.).*(?<!\.)$/.test(localPart) && !localPart.includes("..");
       
       if (!isValid) {
         validateEmail();
@@ -595,7 +701,7 @@
         const dotted = parts.join(".");
         
         // Повторная проверка правил точек (должно быть лишним после проверки выше, но для надежности)
-        if (/^(?!\.).*(?<!\.)$/.test(dotted) && !dotted.includes("..")) {
+        if (dotted.length >= 6 && /^(?!\.).*(?<!\.)$/.test(dotted) && !dotted.includes("..")) {
           variations.add(dotted + "@gmail.com");
           variations.add(dotted + "@googlemail.com");
         }
@@ -685,7 +791,7 @@
       }
     }
     
-    // НОВАЯ/ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ УКОРАЧИВАНИЯ ССЫЛКИ С ИСПОЛЬЗОВАНИЕМ is.gd
+    // ФУНКЦИЯ ДЛЯ УКОРАЧИВАНИЯ ССЫЛКИ С ИСПОЛЬЗОВАНИЕМ is.gd
     async function shortenLink(longUrl, outputElementId) {
       const output = document.getElementById(outputElementId);
       const lang = document.documentElement.lang || 'uk';
@@ -708,16 +814,13 @@
         
         if (data.shorturl) {
           output.value = data.shorturl;
-          showToast(t.copySuccess); // Показываем уведомление об успешном укорачивании
+          showToast(t.copySuccess); 
         } else if (data.error) {
-          // Обработка ошибок, возвращаемых is.gd (например, 'Please enter a valid URL')
           throw new Error(data.error);
         } else {
-          // Неизвестная ошибка
           throw new Error("Неизвестный ответ от сервиса укорачивания.");
         }
       } catch (error) {
-        // Показываем стандартное сообщение об ошибке, если API недоступен или вернул ошибку
         alert(`${t.shortenLinkError} ${error.message || ""}`); 
       }
     }
@@ -728,6 +831,175 @@
       await shortenLink(link, "driveOutput");
     }
     
+    // ===============================================
+    // НОВЫЕ ФУНКЦИИ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+    // ===============================================
+    
+    function validateCountInput() {
+        const countInput = document.getElementById("countInput");
+        const errorField = document.getElementById("loginCountError");
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        
+        let count = parseInt(countInput.value, 10);
+        
+        if (isNaN(count) || count < 1 || count > 50) {
+            errorField.innerText = t.invalidCountError;
+            errorField.style.display = "block";
+            // Ограничиваем ввод, но не сбрасываем, чтобы пользователь мог исправить
+            if (count < 1) countInput.value = 1;
+            if (count > 50) countInput.value = 50;
+        } else {
+            errorField.style.display = "none";
+        }
+    }
+    
+    function validateLengthInput() {
+        const lengthInput = document.getElementById("lengthInput");
+        const errorField = document.getElementById("loginLengthError");
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        
+        let length = parseInt(lengthInput.value, 10);
+        
+        // МАКСИМАЛЬНАЯ ДЛИНА 20
+        if (isNaN(length) || length < 6 || length > 20) {
+            errorField.innerText = t.invalidLengthError;
+            errorField.style.display = "block";
+            // Ограничиваем ввод
+            if (length < 6) lengthInput.value = 6;
+            if (length > 20) lengthInput.value = 20;
+        } else {
+            errorField.style.display = "none";
+        }
+    }
+    
+    // Вспомогательная функция для получения случайного элемента из массива
+    function getRandomItem(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+    
+    // ОБНОВЛЕННЫЙ СПИСОК СЛОВ: добавлен юмор, ирония, и "мемные" слова.
+    const wordList = [
+        // Нейтральные слова, имена и популярные основы
+        "quick", "smart", "happy", "lucky", "fresh", "cool", "fire", "ice",
+        "star", "sky", "cloud", "sun", "moon", "wave", "peak", "zone", "game",
+        "book", "note", "key", "link", "code", "data", "byte", "mega", "pro", "master",
+        "max", "neo", "alex", "mila", "leo", "nina", "june", "nova", "power", "speed", 
+        "turbo", "logic", "dream", "quest", "elite", "prime", "optic", "delta",
+        
+        // Смешные/Ироничные/Необычные слова (для юмора)
+        "potato", "ninja", "bacon", "fluffy", "shush", "oops", "yikes", "sushi",
+        "waffle", "socks", "ghost", "noodle", "zebra", "squid", "troll", "bot",
+        "fail", "epic", "weird", "hello", "yolo", "oof", "giga", "hacker", "banana", "pickle"
+    ];
+
+    /**
+     * Генерирует логины на основе слов из wordList, комбинируя их с цифрами.
+     */
+    function generateWordBasedLogins() {
+        const output = document.getElementById("loginOutput");
+        
+        validateCountInput();
+        validateLengthInput();
+        
+        const countInput = document.getElementById("countInput");
+        const lengthInput = document.getElementById("lengthInput");
+        
+        const count = parseInt(countInput.value, 10);
+        const targetLength = parseInt(lengthInput.value, 10);
+
+        if (isNaN(count) || count < 1 || count > 50 || isNaN(targetLength) || targetLength < 6 || targetLength > 20) {
+            output.value = "";
+            return;
+        }
+        
+        const digits = '0123456789';
+        
+        const generatedLogins = new Set();
+        let attempts = 0;
+        const maxAttempts = count * 100;
+
+        while (generatedLogins.size < count && attempts < maxAttempts) {
+            let baseWord = getRandomItem(wordList);
+            let login = '';
+            
+            // Если длина слова уже больше или равна целевой, обрезаем и добавляем 1-2 цифры
+            if (baseWord.length >= targetLength - 2) {
+                // Берем максимум (targetLength - 1), чтобы осталось место для цифры
+                const maxWordLen = Math.min(baseWord.length, targetLength - 2); 
+                baseWord = baseWord.substring(0, maxWordLen);
+                login = baseWord;
+                // Добавляем минимум 2 цифры для уникальности и выполнения минимальной длины
+                const numDigits = targetLength - login.length;
+                for (let i = 0; i < numDigits; i++) {
+                    login += getRandomItem(digits);
+                }
+            } else {
+                // Слово короче целевой длины, заполняем остаток.
+                const remainingLength = targetLength - baseWord.length;
+                
+                // 1. Используем либо второе слово, либо цифры.
+                if (remainingLength >= 5 && Math.random() < 0.6) { // 60% шанс на два слова
+                    let secondWord = getRandomItem(wordList);
+                    let combined = baseWord + secondWord;
+                    
+                    if (combined.length <= targetLength - 2) {
+                        login = combined;
+                        const numDigits = targetLength - login.length;
+                        for (let i = 0; i < numDigits; i++) {
+                             login += getRandomItem(digits);
+                        }
+                    } else {
+                        // Если 2 слова слишком длинные, обрезаем второе и добавляем цифры
+                        const remainingSpace = targetLength - baseWord.length - 2; // -2 для мин. 2 цифр
+                        const maxSecondWordLen = Math.max(0, remainingSpace);
+                        combined = baseWord + secondWord.substring(0, maxSecondWordLen);
+                        login = combined;
+                        
+                        const numDigits = targetLength - login.length;
+                        for (let i = 0; i < numDigits; i++) {
+                             login += getRandomItem(digits);
+                        }
+                    }
+                } else {
+                    // 2. Только одно слово + цифры для оставшейся длины
+                    login = baseWord;
+                    for (let i = 0; i < remainingLength; i++) {
+                        login += getRandomItem(digits);
+                    }
+                }
+            }
+
+            // Финальная проверка длины и уникальности
+            login = login.substring(0, targetLength);
+            // Убеждаемся, что в логине есть хотя бы одна цифра (для уникальности)
+            if (login.length >= 6 && /[0-9]/.test(login)) { 
+                generatedLogins.add(login);
+            }
+            attempts++;
+        }
+        
+        const loginList = Array.from(generatedLogins).sort();
+        output.value = loginList.join("\n");
+    }
+
+    function copyLogins() {
+        const text = document.getElementById("loginOutput").value;
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        
+        if (!text.trim()) {
+            alert(t.noLoginsToCopyError);
+            return;
+        }
+        copyToClipboard(text);
+    }
+    
+    // ===============================================
+    // КОНЕЦ НОВЫХ ФУНКЦИЙ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+    // ===============================================
+
   </script>
 </body>
 </html>
