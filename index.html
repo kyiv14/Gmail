@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Инструменты Google</title>
+  <title>Інструменти Google</title>
   <link rel="icon" type="image/x-icon" href="https://gmail24.netlify.app/icon.ico" />
   <style>
     /* VARIABLES */
@@ -104,8 +104,7 @@
       margin: 10px 0; /* Убраны вертикальные отступы внутри контейнера */
       padding: 25px; /* Немного уменьшены внутренние отступы */
       border-radius: 18px; 
-      box-shadow: 0 4p
-        x 12px var(--shadow-color), 0 1px 3px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 12px var(--shadow-color), 0 1px 3px rgba(0, 0, 0, 0.05);
       display: flex;
       flex-direction: column;
       transition: transform var(--transition-duration) ease, box-shadow var(--transition-duration) ease; 
@@ -212,6 +211,46 @@
       margin-bottom: 15px;
     }
 
+    /* TOAST NOTIFICATION STYLES */
+    #toastNotification {
+      visibility: hidden; /* Скрыто по умолчанию */
+      min-width: 250px;
+      margin-left: -125px;
+      background-color: var(--primary-color);
+      color: var(--secondary-color);
+      text-align: center;
+      border-radius: 10px;
+      padding: 16px;
+      position: fixed;
+      z-index: 10;
+      left: 50%;
+      bottom: 30px;
+      font-size: 17px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: visibility 0s, opacity 0.5s ease;
+    }
+
+    /* Класс для показа уведомления */
+    #toastNotification.show {
+      visibility: visible;
+      opacity: 1;
+      /* Добавим небольшую анимацию подъема */
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+
+    /* Анимация появления и исчезновения */
+    @keyframes fadein {
+      from {bottom: 0; opacity: 0;}
+      to {bottom: 30px; opacity: 1;}
+    }
+
+    @keyframes fadeout {
+      from {bottom: 30px; opacity: 1;}
+      to {bottom: 0; opacity: 0;}
+    }
+
     /* MEDIA QUERIES - Vertical layout for smaller screens */
     @media (max-width: 700px) {
       .tool-container {
@@ -228,12 +267,24 @@
 </head>
 <body>
   <div class="lang-selector">
+    <button onclick="setLanguage('uk')"><img src="https://flagcdn.com/w40/ua.png" alt="UK">UK</button>
     <button onclick="setLanguage('ru')"><img src="https://flagcdn.com/w40/ru.png" alt="RU">RU</button>
     <button onclick="setLanguage('en')"><img src="https://flagcdn.com/w40/us.png" alt="EN">EN</button>
     <button onclick="setLanguage('es')"><img src="https://flagcdn.com/w40/es.png" alt="ES">ES</button>
   </div>
   
   <div class="tool-container">
+      <div class="tool">
+        <h2 id="driveTitle">Пряма посилання Google Диска</h2>
+        <input type="text" id="driveInput" placeholder="Вставьте ссылку на файл в Google Диске">
+        <div class="button-row">
+          <button onclick="convertDriveLink()" id="convertBtn">Преобразовать</button>
+          <button onclick="copyDrive()" id="copyDriveBtn">Скопировать ссылку</button>
+          <button onclick="goToDriveLink()" id="goToLinkBtn">Перейти по ссылке</button>
+        </div>
+        <textarea id="driveOutput" placeholder="Прямая ссылка для скачивания" readonly></textarea>
+      </div>
+      
       <div class="tool">
         <h2 id="gmailTitle">Вариации почты Gmail</h2>
         <input type="text" id="emailInput" placeholder="Введите Gmail адрес, например dokyt56fg78@gmail.com" oninput="validateEmail()">
@@ -247,20 +298,10 @@
         </div>
         <textarea id="gmailOutput" placeholder="Здесь появятся варианты..." readonly></textarea>
       </div>
-
-      <div class="tool">
-        <h2 id="driveTitle">Прямая ссылка Google Диска</h2>
-        <input type="text" id="driveInput" placeholder="Вставьте ссылку на файл в Google Диске">
-        <div class="button-row">
-          <button onclick="convertDriveLink()" id="convertBtn">Преобразовать</button>
-          <button onclick="copyDrive()" id="copyDriveBtn">Скопировать ссылку</button>
-          <button onclick="goToDriveLink()" id="goToLinkBtn">Перейти по ссылке</button>
-          <button onclick="shortenDriveLink()" id="shortenLinkBtn">Укоротить ссылку</button>
-        </div>
-        <textarea id="driveOutput" placeholder="Прямая ссылка для скачивания" readonly></textarea>
-      </div>
   </div>
   
+  <div id="toastNotification">Скопировано!</div>
+
   <script>
     // --- START: Existing Helper Functions (for XLSX, kept as is) ---
     var gk_isXlsx = false;
@@ -306,21 +347,18 @@
         convertBtn: "Преобразовать",
         copyDriveBtn: "Скопировать ссылку",
         goToLinkBtn: "Перейти по ссылке",
-        shortenLinkBtn: "Укоротить ссылку",
         emailCounter: "Вариаций: ",
         emailInputPlaceholder: "Введите Gmail адрес, например dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Здесь появятся варианты...",
         driveInputPlaceholder: "Вставьте ссылку на файл в Google Диске",
         driveOutputPlaceholder: "Прямая ссылка для скачивания",
-        copySuccess: "Скопировано!",
+        copySuccess: "Скопировано!", // Изменено с "Скопировано!" на текст для уведомления
         copyError: "Ошибка копирования: ",
         invalidEmailError: "Некорректный Gmail адрес",
         noGmailDataError: "Нет данных для сохранения.",
         noGmailExportError: "Нет данных для экспорта.",
         invalidDriveLinkError: "Не удалось извлечь ID файла. Проверьте правильность ссылки.",
         noDriveLinkError: "Нет ссылки для перехода. Сначала преобразуйте ссылку.",
-        noLinkToShortenError: "Нет ссылки для укорачивания. Сначала преобразуйте ссылку.",
-        shortenLinkError: "Ошибка при укорачивании ссылки. Проверьте API-ключ или обратитесь в поддержку T.LY."
       },
       en: {
         gmailTitle: "Gmail Address Variations",
@@ -332,21 +370,18 @@
         convertBtn: "Convert",
         copyDriveBtn: "Copy Link",
         goToLinkBtn: "Go to Link",
-        shortenLinkBtn: "Shorten Link",
         emailCounter: "Variations: ",
         emailInputPlaceholder: "Enter Gmail address, e.g., dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Variations will appear here...",
         driveInputPlaceholder: "Paste the Google Drive file link",
         driveOutputPlaceholder: "Direct download link",
-        copySuccess: "Copied!",
+        copySuccess: "Copied!", // Изменено
         copyError: "Copy error: ",
         invalidEmailError: "Invalid Gmail address",
         noGmailDataError: "No data to save.",
         noGmailExportError: "No data to export.",
         invalidDriveLinkError: "Failed to extract file ID. Check the link.",
         noDriveLinkError: "No link to navigate to. Convert the link first.",
-        noLinkToShortenError: "No link to shorten. Convert the link first.",
-        shortenLinkError: "Error shortening link. Check the API key or contact T.LY support."
       },
       es: {
         gmailTitle: "Variaciones de Gmail",
@@ -358,23 +393,52 @@
         convertBtn: "Convertir",
         copyDriveBtn: "Copiar enlace",
         goToLinkBtn: "Ir al enlace",
-        shortenLinkBtn: "Acortar enlace",
         emailCounter: "Variaciones: ",
         emailInputPlaceholder: "Ingrese la dirección de Gmail, por ejemplo, dokyt56fg78@gmail.com",
         gmailOutputPlaceholder: "Las variaciones aparecerán aquí...",
         driveInputPlaceholder: "Pegue el enlace del archivo de Google Drive",
         driveOutputPlaceholder: "Enlace de descarga directa",
-        copySuccess: "¡Copiado!",
+        copySuccess: "¡Copiado!", // Изменено
         copyError: "Error al copiar: ",
         invalidEmailError: "Dirección de Gmail no válida",
         noGmailDataError: "No hay datos para guardar.",
         noGmailExportError: "No hay datos para exportar.",
         invalidDriveLinkError: "No se pudo extraer el ID del archivo. Verifique el enlace.",
         noDriveLinkError: "No hay enlace para navegar. Convierta el enlace primero.",
-        noLinkToShortenError: "No hay enlace para acortar. Convierta el enlace primero.",
-        shortenLinkError: "Error al acortar el enlace. Verifique la clave API o contacte con el soporte de T.LY."
+      },
+      uk: { // Новый украинский язык
+        gmailTitle: "Варіації пошти Gmail",
+        generateBtn: "Згенерувати",
+        copyBtn: "Скопіювати все",
+        downloadTxtBtn: "Завантажити .txt",
+        downloadCsvBtn: "Експорт у CSV",
+        driveTitle: "Пряме посилання Google Диска",
+        convertBtn: "Перетворити",
+        copyDriveBtn: "Скопіювати посилання",
+        goToLinkBtn: "Перейти за посиланням",
+        emailCounter: "Варіацій: ",
+        emailInputPlaceholder: "Введіть адресу Gmail, наприклад dokyt56fg78@gmail.com",
+        gmailOutputPlaceholder: "Тут з'являться варіанти...",
+        driveInputPlaceholder: "Вставте посилання на файл у Google Диску",
+        driveOutputPlaceholder: "Пряме посилання для завантаження",
+        copySuccess: "Скопійовано!", // Изменено
+        copyError: "Помилка копіювання: ",
+        invalidEmailError: "Некоректна адреса Gmail",
+        noGmailDataError: "Немає даних для збереження.",
+        noGmailExportError: "Немає даних для експорту.",
+        invalidDriveLinkError: "Не вдалося витягти ID файлу. Перевірте правильність посилання.",
+        noDriveLinkError: "Немає посилання для переходу. Спершу перетворіть посилання.",
       }
     };
+
+    // ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ УВЕДОМЛЕНИЯ
+    function showToast(message) {
+        const toast = document.getElementById("toastNotification");
+        toast.innerText = message;
+        toast.className = "show";
+        setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+
 
     function setLanguage(lang) {
       document.documentElement.lang = lang;
@@ -388,26 +452,31 @@
       document.getElementById("convertBtn").innerText = t.convertBtn;
       document.getElementById("copyDriveBtn").innerText = t.copyDriveBtn;
       document.getElementById("goToLinkBtn").innerText = t.goToLinkBtn;
-      document.getElementById("shortenLinkBtn").innerText = t.shortenLinkBtn;
+      // document.getElementById("shortenLinkBtn").innerText = t.shortenLinkBtn; // Удалено
       const currentCount = document.getElementById("gmailOutput").value.split('\n').filter(Boolean).length;
       document.getElementById("emailCounter").innerText = t.emailCounter + currentCount;
       document.getElementById("emailInput").placeholder = t.emailInputPlaceholder;
       document.getElementById("gmailOutput").placeholder = t.gmailOutputPlaceholder;
       document.getElementById("driveInput").placeholder = t.driveInputPlaceholder;
       document.getElementById("driveOutput").placeholder = t.driveOutputPlaceholder;
+      // Обновление текста уведомления
+      document.getElementById("toastNotification").innerText = t.copySuccess; 
     }
     
     document.addEventListener('DOMContentLoaded', () => {
-        setLanguage('ru');
+        // Установка украинского языка по умолчанию
+        setLanguage('uk');
     });
 
     async function copyToClipboard(text) {
-      const lang = document.documentElement.lang || 'ru';
+      const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       try {
         await navigator.clipboard.writeText(text);
-        alert(t.copySuccess);
+        // ЗАМЕНА: alert() на showToast()
+        showToast(t.copySuccess); 
       } catch (err) {
+        // Ошибка остаётся как alert()
         alert(t.copyError + err);
       }
     }
@@ -416,7 +485,7 @@
       const emailField = document.getElementById("emailInput");
       const errorField = document.getElementById("emailError");
       const email = emailField.value.trim();
-      const lang = document.documentElement.lang || 'ru';
+      const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       const localPart = email.split("@")[0];
       // Updated regex to handle the dot rule correctly based on Gmail's behavior (dots don't matter, but we check for general validity)
@@ -436,7 +505,7 @@
       const email = document.getElementById("emailInput").value.trim().toLowerCase();
       const output = document.getElementById("gmailOutput");
       const counter = document.getElementById("emailCounter");
-      const lang = document.documentElement.lang || 'ru';
+      const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       output.value = "";
       
@@ -486,7 +555,7 @@
     }
 
     function downloadTextFile(filename, content) {
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-utf-8' });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = filename;
@@ -497,7 +566,7 @@
 
     function downloadGmail() {
       const text = document.getElementById("gmailOutput").value;
-      const lang = document.documentElement.lang || 'ru';
+      const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       if (!text.trim()) {
         alert(t.noGmailDataError);
@@ -508,7 +577,7 @@
 
     function downloadCSV() {
       const text = document.getElementById("gmailOutput").value;
-      const lang = document.documentElement.lang || 'ru';
+      const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       if (!text.trim()) {
         alert(t.noGmailExportError);
@@ -530,7 +599,7 @@
     function convertDriveLink() {
       const input = document.getElementById("driveInput").value.trim();
       const output = document.getElementById("driveOutput");
-      const lang = document.documentElement.lang || 'ru';
+      const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       const match = input.match(/(?:\/d\/|id=|\/file\/d\/|drive\.google\.com\/(?:file\/d\/|open\?id=))([a-zA-Z0-9_-]{10,})/);
       if (match && match[1]) {
@@ -549,7 +618,7 @@
 
     function goToDriveLink() {
       const link = document.getElementById("driveOutput").value.trim();
-      const lang = document.documentElement.lang || 'ru';
+      const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       if (link) {
         window.open(link, '_blank');
@@ -561,57 +630,7 @@
     // T.LY API key and functions are removed, but the original logic for shortening is kept in case the user changes their mind.
     const TLY_API_KEY = "Bearer RUqLv6yD7jSQIzEpmFjwTW9l440Q2H6LbTKuTq6J9cY0ZPwaTUw2tbcgLmeC";
     const TLY_API_URL = "https://t.ly/api/v1/link/shorten";
-
-    async function shortenLink(longUrl, outputElementId) {
-      const output = document.getElementById(outputElementId);
-      const lang = document.documentElement.lang || 'ru';
-      const t = translations[lang];
-      output.value = ""; 
-      
-      if (!longUrl) {
-          alert(t.noLinkToShortenError);
-          return;
-      }
-      
-      try {
-        const online = navigator.onLine;
-        if (!online) {
-          throw new Error("Нет подключения к интернету. Проверьте сеть.");
-        }
-
-        const response = await fetch(TLY_API_URL, {
-          method: "POST",
-          headers: {
-            "Authorization": TLY_API_KEY,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            long_url: longUrl,
-            domain: "https://t.ly/",
-            include_qr_code: false
-          })
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Status: ${response.status}, Details: ${errorText}`);
-        }
-
-        const data = await response.json();
-        output.value = data.short_url;
-      } catch (error) {
-        alert(t.shortenLinkError); 
-      }
-    }
-
-    // This function remains to support the "Укоротить ссылку" button in the Drive tool
-    async function shortenDriveLink() {
-      const link = document.getElementById("driveOutput").value.trim();
-      await shortenLink(link, "driveOutput");
-    }
-
-    // The function for TLY shortener tool is removed, as is the tool itself.
+    
   </script>
 </body>
 </html>
