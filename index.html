@@ -90,7 +90,8 @@
         display: flex;
         gap: 20px; /* Расстояние между окнами */
         width: 100%;
-        max-width: 1040px; /* Общая максимальная ширина для трех окон (3*320 + 2*gap) */
+        /* Увеличена максимальная ширина для 4 колонок (4*320 + 3*gap) */
+        max-width: 1380px; 
         justify-content: center;
         flex-wrap: wrap; /* Позволяет окнам переноситься на новую строку на маленьких экранах */
     }
@@ -191,12 +192,23 @@
     }
     
     /* Стили для кнопок, которые не являются первой в ряду (для генератора логинов) */
-    .tool:last-child .button-row button:first-child { 
+    .tool:nth-child(3) .button-row button:first-child { 
         background: var(--primary-color);
         color: var(--secondary-color);
     }
     
     /* Стили для кнопок, которые не являются первой в ряду */
+    .tool:nth-child(3) .button-row button:not(:first-child) { 
+        background: #e9e9e9;
+        color: var(--text-color);
+    }
+    
+    /* Стили для кнопок, которые не являются первой в ряду (для нового укорочителя) */
+    .tool:last-child .button-row button:first-child { 
+        background: var(--primary-color);
+        color: var(--secondary-color);
+    }
+    
     .tool:last-child .button-row button:not(:first-child) { 
         background: #e9e9e9;
         color: var(--text-color);
@@ -219,6 +231,7 @@
       opacity: 1;
     }
     
+    .tool:nth-child(3) .button-row button:not(:first-child):hover,
     .tool:last-child .button-row button:not(:first-child):hover {
         background: #d8d8d8;
     }
@@ -286,7 +299,12 @@
     }
 
     /* MEDIA QUERIES - Vertical layout for smaller screens */
-    @media (max-width: 1060px) { /* Изменено с 700px для 3 колонок */
+    @media (max-width: 1390px) { /* Изменено для 4-х колонок (для 3-х колонок) */
+        .tool-container {
+            max-width: 1040px; /* 3 колонки */
+        }
+    }
+    @media (max-width: 1060px) { /* Изменено для 3-х колонок (для 2-х колонок) */
         .tool-container {
             max-width: 700px; /* 2 колонки */
         }
@@ -356,7 +374,19 @@
         </div>
         <textarea id="loginOutput" placeholder="Здесь появятся короткие логины..." readonly></textarea>
       </div>
+      
+      <div class="tool">
+        <h2 id="shortenerTitle">Укорочувач посилань</h2>
+        <input type="text" id="shortenerInput" placeholder="Вставьте длинную ссылку">
+        <input type="text" id="customIdInput" placeholder="Кастомный ID (опционально)">
+        <div class="button-row">
+          <button onclick="shortenCustomLink()" id="shortenCustomBtn">Укоротить</button>
+          <button onclick="copyShortenedLink()" id="copyShortenedBtn">Скопировать</button>
+        </div>
+        <textarea id="shortenerOutput" placeholder="Укороченная ссылка появится здесь" readonly></textarea>
       </div>
+      
+  </div>
   
   <div id="toastNotification">Скопировано!</div>
 
@@ -430,6 +460,15 @@
         invalidCountError: "Количество должно быть от 1 до 50.",
         invalidLengthError: "Длина должна быть от 6 до 20 символов.", 
         noLoginsToCopyError: "Нет сгенерированных логинов для копирования.",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
+        shortenerTitle: "Укоротитель ссылок",
+        shortenCustomBtn: "Укоротить",
+        copyShortenedBtn: "Скопировать",
+        shortenerInputPlaceholder: "Вставьте длинную ссылку",
+        customIdInputPlaceholder: "Кастомный ID (опционально)",
+        shortenerOutputPlaceholder: "Укороченная ссылка появится здесь",
+        noLinkToShortenGeneralError: "Введите ссылку для укорачивания.",
+        shortenGeneralError: "Ошибка при укорачивании ссылки:",
       },
       en: {
         gmailTitle: "Gmail Address Variations",
@@ -466,6 +505,15 @@
         invalidCountError: "Count must be between 1 and 50.",
         invalidLengthError: "Length must be between 6 and 20 characters.", 
         noLoginsToCopyError: "No generated logins to copy.",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
+        shortenerTitle: "Link Shortener",
+        shortenCustomBtn: "Shorten",
+        copyShortenedBtn: "Copy",
+        shortenerInputPlaceholder: "Paste long link",
+        customIdInputPlaceholder: "Custom ID (optional)",
+        shortenerOutputPlaceholder: "Shortened link will appear here",
+        noLinkToShortenGeneralError: "Enter a link to shorten.",
+        shortenGeneralError: "Error shortening link:",
       },
       es: {
         gmailTitle: "Variaciones de Gmail",
@@ -502,6 +550,15 @@
         invalidCountError: "La cantidad debe estar entre 1 y 50.",
         invalidLengthError: "La longitud debe ser entre 6 и 20 caracteres.", 
         noLoginsToCopyError: "No hay logins generados para copiar.",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
+        shortenerTitle: "Acortador de Enlaces",
+        shortenCustomBtn: "Acortar",
+        copyShortenedBtn: "Copiar",
+        shortenerInputPlaceholder: "Pegue el enlace largo",
+        customIdInputPlaceholder: "ID personalizado (opcional)",
+        shortenerOutputPlaceholder: "El enlace acortado aparecerá aquí",
+        noLinkToShortenGeneralError: "Ingrese un enlace para acortar.",
+        shortenGeneralError: "Error al acortar el enlace:",
       },
       uk: { 
         gmailTitle: "Варіації пошти Gmail",
@@ -538,6 +595,15 @@
         invalidCountError: "Кількість має бути від 1 до 50.",
         invalidLengthError: "Довжина має бути від 6 до 20 символів.", 
         noLoginsToCopyError: "Немає згенерованих логінів для копіювання.",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
+        shortenerTitle: "Укорочувач посилань",
+        shortenCustomBtn: "Укоротити",
+        copyShortenedBtn: "Скопіювати",
+        shortenerInputPlaceholder: "Вставте довге посилання",
+        customIdInputPlaceholder: "Кастомний ID (опціонально)",
+        shortenerOutputPlaceholder: "Скорочене посилання з'явиться тут",
+        noLinkToShortenGeneralError: "Введіть посилання для скорочення.",
+        shortenGeneralError: "Помилка при скороченні посилання:",
       }
     };
 
@@ -585,6 +651,14 @@
       document.getElementById("generateLoginBtn").innerText = t.generateLoginBtn;
       document.getElementById("copyLoginsBtn").innerText = t.copyLoginsBtn;
       document.getElementById("loginOutput").placeholder = t.loginOutputPlaceholder;
+      
+      // ОБНОВЛЕНИЕ ДЛЯ НОВОГО УКОРОТИТЕЛЯ
+      document.getElementById("shortenerTitle").innerText = t.shortenerTitle;
+      document.getElementById("shortenCustomBtn").innerText = t.shortenCustomBtn;
+      document.getElementById("copyShortenedBtn").innerText = t.copyShortenedBtn;
+      document.getElementById("shortenerInput").placeholder = t.shortenerInputPlaceholder;
+      document.getElementById("customIdInput").placeholder = t.customIdInputPlaceholder;
+      document.getElementById("shortenerOutput").placeholder = t.shortenerOutputPlaceholder;
     }
     
     document.addEventListener('DOMContentLoaded', () => {
@@ -792,17 +866,22 @@
     }
     
     // ФУНКЦИЯ ДЛЯ УКОРАЧИВАНИЯ ССЫЛКИ С ИСПОЛЬЗОВАНИЕМ is.gd
-    async function shortenLink(longUrl, outputElementId) {
+    async function shortenLink(longUrl, outputElementId, customId = null) {
       const output = document.getElementById(outputElementId);
       const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       
       if (!longUrl) {
-          alert(t.noLinkToShortenError);
+          alert(t.noLinkToShortenError); // Используем общую ошибку для Drive
           return;
       }
       
-      const apiEndpoint = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`;
+      let apiEndpoint = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`;
+      
+      // Добавляем кастомный ID, если он есть
+      if (customId) {
+          apiEndpoint += `&shorturl=${encodeURIComponent(customId)}`;
+      }
 
       try {
         const response = await fetch(apiEndpoint);
@@ -821,11 +900,15 @@
           throw new Error("Неизвестный ответ от сервиса укорачивания.");
         }
       } catch (error) {
-        alert(`${t.shortenLinkError} ${error.message || ""}`); 
+        // Для Drive используем специфичную ошибку
+        const errorMessage = outputElementId === "driveOutput" 
+                           ? t.shortenLinkError 
+                           : t.shortenGeneralError;
+        alert(`${errorMessage} ${error.message || ""}`); 
       }
     }
     
-    // ФУНКЦИЯ, ВЫЗЫВАЕМАЯ КНОПКОЙ "Укоротить ссылку"
+    // ФУНКЦИЯ, ВЫЗЫВАЕМАЯ КНОПКОЙ "Укоротить ссылку" для Google Drive
     async function shortenDriveLink() {
       const link = document.getElementById("driveOutput").value.trim();
       await shortenLink(link, "driveOutput");
@@ -998,6 +1081,43 @@
     
     // ===============================================
     // КОНЕЦ НОВЫХ ФУНКЦИЙ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+    // ===============================================
+
+    // ===============================================
+    // НОВЫЕ ФУНКЦИИ ДЛЯ УКОРОТИТЕЛЯ ССЫЛОК
+    // ===============================================
+    
+    async function shortenCustomLink() {
+        const longUrl = document.getElementById("shortenerInput").value.trim();
+        const customId = document.getElementById("customIdInput").value.trim();
+        const output = document.getElementById("shortenerOutput");
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        
+        output.value = ""; // Очищаем поле вывода
+        
+        if (!longUrl) {
+            alert(t.noLinkToShortenGeneralError);
+            return;
+        }
+        
+        await shortenLink(longUrl, "shortenerOutput", customId);
+    }
+    
+    function copyShortenedLink() {
+        const text = document.getElementById("shortenerOutput").value;
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        
+        if (!text.trim()) {
+            alert(t.noLinkToShortenGeneralError); // Используем эту ошибку, так как нет сгенерированной ссылки
+            return;
+        }
+        copyToClipboard(text);
+    }
+
+    // ===============================================
+    // КОНЕЦ НОВЫХ ФУНКЦИЙ ДЛЯ УКОРОТИТЕЛЯ ССЫЛОК
     // ===============================================
 
   </script>
