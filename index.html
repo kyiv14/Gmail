@@ -893,7 +893,8 @@
         
         if (data.shorturl) {
           output.value = data.shorturl;
-          showToast(t.copySuccess); 
+          // УДАЛЕНА СТРОКА: showToast(t.copySuccess); 
+          // Примечание: для Drive-линков тут все равно сработает, но в другом разделе
         } else if (data.error) {
           throw new Error(data.error);
         } else {
