@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Інструменти Google</title>
-  <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/kyiv14/Gmail/refs/heads/main/icon.ico" />
+  <link rel="icon" type="image/x-icon" href="https://gmail24.vercel.app/icon.ico" />
   <style>
     /* VARIABLES */
     :root {
@@ -298,6 +298,17 @@
       to {bottom: 0; opacity: 0;}
     }
 
+    /* NEW: Style for the displayed short link */
+    .shortener-output-display {
+      font-size: 16px;
+      font-weight: 700; /* Жирный шрифт */
+      color: var(--primary-color); /* Цвет как у кнопки */
+      text-align: center; /* Центрирование */
+      padding: 15px 0;
+      margin-bottom: 15px; /* Отступ от кнопок */
+      word-break: break-all; /* Для длинных ссылок */
+    }
+
     /* MEDIA QUERIES - Vertical layout for smaller screens */
     @media (max-width: 1390px) { /* Изменено для 4-х колонок (для 3-х колонок) */
         .tool-container {
@@ -379,12 +390,14 @@
         <h2 id="shortenerTitle">Укорочувач посилань</h2>
         <input type="text" id="shortenerInput" placeholder="Вставьте длинную ссылку">
         <input type="text" id="customIdInput" placeholder="Кастомный ID (опционально)">
+        
+        <div id="shortenerOutputDisplay" class="shortener-output-display" style="display:none"></div>
+        
         <div class="button-row">
           <button onclick="shortenCustomLink()" id="shortenCustomBtn">Укоротить</button>
           <button onclick="copyShortenedLink()" id="copyShortenedBtn">Скопировать</button>
         </div>
-        <textarea id="shortenerOutput" placeholder="Укороченная ссылка появится здесь" readonly></textarea>
-      </div>
+        </div>
       
   </div>
   
@@ -466,7 +479,7 @@
         copyShortenedBtn: "Скопировать",
         shortenerInputPlaceholder: "Вставьте длинную ссылку",
         customIdInputPlaceholder: "Кастомный ID (опционально)",
-        shortenerOutputPlaceholder: "Укороченная ссылка появится здесь",
+        // shortenerOutputPlaceholder: "Укороченная ссылка появится здесь", // УДАЛЕНО
         noLinkToShortenGeneralError: "Введите ссылку для укорачивания.",
         shortenGeneralError: "Ошибка при укорачивании ссылки:",
       },
@@ -511,7 +524,7 @@
         copyShortenedBtn: "Copy",
         shortenerInputPlaceholder: "Paste long link",
         customIdInputPlaceholder: "Custom ID (optional)",
-        shortenerOutputPlaceholder: "Shortened link will appear here",
+        // shortenerOutputPlaceholder: "Shortened link will appear here", // УДАЛЕНО
         noLinkToShortenGeneralError: "Enter a link to shorten.",
         shortenGeneralError: "Error shortening link:",
       },
@@ -556,7 +569,7 @@
         copyShortenedBtn: "Copiar",
         shortenerInputPlaceholder: "Pegue el enlace largo",
         customIdInputPlaceholder: "ID personalizado (opcional)",
-        shortenerOutputPlaceholder: "El enlace acortado aparecerá aquí",
+        // shortenerOutputPlaceholder: "El enlace acortado aparecerá aquí", // УДАЛЕНО
         noLinkToShortenGeneralError: "Ingrese un enlace para acortar.",
         shortenGeneralError: "Error al acortar el enlace:",
       },
@@ -601,7 +614,7 @@
         copyShortenedBtn: "Скопіювати",
         shortenerInputPlaceholder: "Вставте довге посилання",
         customIdInputPlaceholder: "Кастомний ID (опціонально)",
-        shortenerOutputPlaceholder: "Скорочене посилання з'явиться тут",
+        // shortenerOutputPlaceholder: "Скорочене посилання з'явиться тут", // УДАЛЕНО
         noLinkToShortenGeneralError: "Введіть посилання для скорочення.",
         shortenGeneralError: "Помилка при скороченні посилання:",
       }
@@ -658,7 +671,7 @@
       document.getElementById("copyShortenedBtn").innerText = t.copyShortenedBtn;
       document.getElementById("shortenerInput").placeholder = t.shortenerInputPlaceholder;
       document.getElementById("customIdInput").placeholder = t.customIdInputPlaceholder;
-      document.getElementById("shortenerOutput").placeholder = t.shortenerOutputPlaceholder;
+      // document.getElementById("shortenerOutput").placeholder = t.shortenerOutputPlaceholder; // УДАЛЕНО
     }
     
     document.addEventListener('DOMContentLoaded', () => {
@@ -867,7 +880,8 @@
     
     // ФУНКЦИЯ ДЛЯ УКОРАЧИВАНИЯ ССЫЛКИ С ИСПОЛЬЗОВАНИЕМ is.gd
     async function shortenLink(longUrl, outputElementId, customId = null) {
-      const output = document.getElementById(outputElementId);
+      // outputElementId может быть "driveOutput" (textarea) или "shortenerOutputDisplay" (div)
+      const outputElement = document.getElementById(outputElementId);
       const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       
@@ -892,9 +906,14 @@
         const data = await response.json();
         
         if (data.shorturl) {
-          output.value = data.shorturl;
-          // УДАЛЕНА СТРОКА: showToast(t.copySuccess); 
-          // Примечание: для Drive-линков тут все равно сработает, но в другом разделе
+          if (outputElementId === "shortenerOutputDisplay") {
+            // Для нового укоротителя: выводим в div
+            outputElement.innerText = data.shorturl;
+            outputElement.style.display = "block";
+          } else {
+            // Для Google Drive: выводим в textarea
+            outputElement.value = data.shorturl;
+          }
         } else if (data.error) {
           throw new Error(data.error);
         } else {
@@ -906,13 +925,18 @@
                            ? t.shortenLinkError 
                            : t.shortenGeneralError;
         alert(`${errorMessage} ${error.message || ""}`); 
+        // Скрываем поле вывода, если это новый укоротитель и произошла ошибка
+        if (outputElementId === "shortenerOutputDisplay") {
+            outputElement.style.display = "none";
+        }
       }
     }
     
-    // ФУНКЦИЯ, ВЫЗЫВАЕМАЯ КНОПКОЙ "Укоротить ссылку" для Google Drive
+    // ФУНКЦИЯ, ВЫЗЫВАЕМАЯ КНОТКОЙ "Укоротить ссылку" для Google Drive
     async function shortenDriveLink() {
       const link = document.getElementById("driveOutput").value.trim();
-      await shortenLink(link, "driveOutput");
+      // Выводит в textarea driveOutput
+      await shortenLink(link, "driveOutput"); 
     }
     
     // ===============================================
@@ -1091,27 +1115,31 @@
     async function shortenCustomLink() {
         const longUrl = document.getElementById("shortenerInput").value.trim();
         const customId = document.getElementById("customIdInput").value.trim();
-        const output = document.getElementById("shortenerOutput");
+        const outputDisplay = document.getElementById("shortenerOutputDisplay");
         const lang = document.documentElement.lang || 'uk';
         const t = translations[lang];
         
-        output.value = ""; // Очищаем поле вывода
+        outputDisplay.style.display = "none"; // Скрываем до генерации
+        outputDisplay.innerText = ""; // Очищаем текст
         
         if (!longUrl) {
             alert(t.noLinkToShortenGeneralError);
             return;
         }
         
-        await shortenLink(longUrl, "shortenerOutput", customId);
+        // Вызывает shortenLink, который теперь умеет работать с div
+        await shortenLink(longUrl, "shortenerOutputDisplay", customId); 
     }
     
     function copyShortenedLink() {
-        const text = document.getElementById("shortenerOutput").value;
+        // Копируем текст из нового div
+        const text = document.getElementById("shortenerOutputDisplay").innerText; 
         const lang = document.documentElement.lang || 'uk';
         const t = translations[lang];
         
         if (!text.trim()) {
-            alert(t.noLinkToShortenGeneralError); // Используем эту ошибку, так как нет сгенерированной ссылки
+            // Если div пуст, значит, ссылка не была сгенерирована
+            alert(t.noLinkToShortenGeneralError); 
             return;
         }
         copyToClipboard(text);
