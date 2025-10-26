@@ -309,6 +309,102 @@
       word-break: break-all; /* Для длинных ссылок */
     }
 
+    /* --- Стили для Модального окна QR-кода --- */
+    .modal {
+        display: none; /* Скрыто по умолчанию */
+        position: fixed;
+        z-index: 100; /* Высокий индекс для отображения поверх всего */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7); /* Полупрозрачный фон */
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: var(--secondary-color);
+        margin: auto;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        max-width: 90%;
+        width: 400px; /* Фиксированная ширина для QR-кода */
+        text-align: center;
+        position: relative;
+        animation: animatetop 0.4s;
+    }
+
+    @keyframes animatetop {
+        from {top: -300px; opacity: 0}
+        to {top: 0; opacity: 1}
+    }
+
+    .modal-close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .modal-close:hover,
+    .modal-close:focus {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+
+    #qrCodeImage {
+        width: 100%; /* Изображение будет занимать всю ширину контейнера */
+        max-width: 300px; /* Максимальный размер QR-кода */
+        height: auto;
+        margin: 20px auto 30px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        display: block;
+    }
+
+    /* Стиль для кнопки внутри модального окна (НАПРАВЛЕННОЕ ИЗМЕНЕНИЕ) */
+    .modal-button-row {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .modal-button-row button {
+        /* Наследуем базовый стиль основной кнопки */
+        flex: unset; /* Отключаем flex: 1, который применен в .button-row button */
+        width: 80%;
+        padding: 14px 12px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--secondary-color);
+        background: var(--primary-color);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(220, 38, 37, 0.2);
+        transition: all var(--transition-duration) ease;
+    }
+    
+    /* Обеспечиваем стили hover/active для соответствия основной кнопке */
+    .modal-button-row button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px); 
+    }
+    
+    .modal-button-row button:active {
+      transform: translateY(1px) scale(0.99); 
+      box-shadow: 0 1px 2px rgba(220, 38, 37, 0.2);
+    }
+    
     /* MEDIA QUERIES - Vertical layout for smaller screens */
     @media (max-width: 1390px) { /* Изменено для 4-х колонок (для 3-х колонок) */
         .tool-container {
@@ -331,6 +427,10 @@
         max-width: 100%; 
         margin: 15px 0;
       }
+      .modal-content {
+          width: 95%; 
+          padding: 20px;
+      }
     }
   </style>
 </head>
@@ -346,11 +446,15 @@
       <div class="tool">
         <h2 id="driveTitle">Пряма посилання Google Диска</h2>
         <input type="text" id="driveInput" placeholder="Вставьте ссылку на файл в Google Диске">
+        
+        <div id="driveOutputDisplay" class="shortener-output-display" style="display:none"></div>
+        
         <div class="button-row">
           <button onclick="convertDriveLink()" id="convertBtn">Преобразовать</button>
           <button onclick="copyDrive()" id="copyDriveBtn">Скопировать ссылку</button>
           <button onclick="goToDriveLink()" id="goToLinkBtn">Перейти по ссылке</button>
           <button onclick="shortenDriveLink()" id="shortenLinkBtn">Укоротить ссылку</button> 
+          <button onclick="generateDriveQr()" id="generateDriveQrBtn">QR Код</button>
         </div>
         <textarea id="driveOutput" placeholder="Прямая ссылка для скачивания" readonly></textarea>
       </div>
@@ -396,12 +500,25 @@
         <div class="button-row">
           <button onclick="shortenCustomLink()" id="shortenCustomBtn">Укоротить</button>
           <button onclick="copyShortenedLink()" id="copyShortenedBtn">Скопировать</button>
+          <button onclick="generateShortenerQr()" id="generateShortenerQrBtn">QR Код</button>
         </div>
         </div>
       
   </div>
   
   <div id="toastNotification">Скопировано!</div>
+
+  <div id="qrCodeModal" class="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="modal-close" onclick="closeModal(event)">&times;</span>
+      <h3 id="qrModalTitle" style="color:var(--text-color);">QR-код</h3>
+      <img id="qrCodeImage" src="" alt="QR Code">
+      <div class="modal-button-row">
+        <button onclick="downloadQrCode()" id="downloadQrBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
 
   <script>
     // --- START: Existing Helper Functions (for XLSX, kept as is) ---
@@ -449,6 +566,7 @@
         copyDriveBtn: "Скопировать ссылку",
         goToLinkBtn: "Перейти по ссылке",
         shortenLinkBtn: "Укоротить ссылку", 
+        generateDriveQrBtn: "QR Код", 
         emailCounter: "Вариаций: ",
         emailInputPlaceholder: "Введите Gmail логин или адрес, например dokyt56fg78",
         gmailOutputPlaceholder: "Здесь появятся варианты...",
@@ -463,6 +581,10 @@
         noDriveLinkError: "Нет ссылки для перехода. Сначала преобразуйте ссылку.",
         noLinkToShortenError: "Нет ссылки для укорачивания. Сначала преобразуйте ссылку.", 
         shortenLinkError: "Ошибка при укорачивании ссылки. Проверьте ссылку.", 
+        noLinkForQrError: "Нет ссылки для генерации QR-кода. Сначала преобразуйте/введите ссылку.", 
+        qrGenerationError: "Ошибка при генерации QR-кода.", 
+        qrModalTitle: "QR-код для ссылки", // НОВЫЙ ПЕРЕВОД
+        downloadQrBtn: "Сохранить", // НОВЫЙ ПЕРЕВОД
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
         loginGenTitle: "Генератор логинов Gmail",
         countLabel: "Количество (1-50):",
@@ -477,6 +599,7 @@
         shortenerTitle: "Укоротитель ссылок",
         shortenCustomBtn: "Укоротить",
         copyShortenedBtn: "Скопировать",
+        generateShortenerQrBtn: "QR Код", 
         shortenerInputPlaceholder: "Вставьте длинную ссылку",
         customIdInputPlaceholder: "Кастомный ID (опционально)",
         // shortenerOutputPlaceholder: "Укороченная ссылка появится здесь", // УДАЛЕНО
@@ -494,6 +617,7 @@
         copyDriveBtn: "Copy Link",
         goToLinkBtn: "Go to Link",
         shortenLinkBtn: "Shorten Link", 
+        generateDriveQrBtn: "QR Code", 
         emailCounter: "Variations: ",
         emailInputPlaceholder: "Enter Gmail login or address, e.g., dokyt56fg78",
         gmailOutputPlaceholder: "Variations will appear here...",
@@ -508,6 +632,10 @@
         noDriveLinkError: "No link to navigate to. Convert the link first.",
         noLinkToShortenError: "No link to shorten. Convert the link first.", 
         shortenLinkError: "Error shortening link. Check the link.", 
+        noLinkForQrError: "No link to generate QR code. Convert/enter link first.", 
+        qrGenerationError: "Error generating QR code.", 
+        qrModalTitle: "QR Code for Link", // НОВЫЙ ПЕРЕВОД
+        downloadQrBtn: "Download", // НОВЫЙ ПЕРЕВОД
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
         loginGenTitle: "Gmail Login Generator",
         countLabel: "Count (1-50):",
@@ -522,6 +650,7 @@
         shortenerTitle: "Link Shortener",
         shortenCustomBtn: "Shorten",
         copyShortenedBtn: "Copy",
+        generateShortenerQrBtn: "QR Code", 
         shortenerInputPlaceholder: "Paste long link",
         customIdInputPlaceholder: "Custom ID (optional)",
         // shortenerOutputPlaceholder: "Shortened link will appear here", // УДАЛЕНО
@@ -539,6 +668,7 @@
         copyDriveBtn: "Copiar enlace",
         goToLinkBtn: "Ir al enlace",
         shortenLinkBtn: "Acortar enlace", 
+        generateDriveQrBtn: "Código QR", 
         emailCounter: "Variaciones: ",
         emailInputPlaceholder: "Ingrese el login o dirección de Gmail, por ejemplo, dokyt56fg78",
         gmailOutputPlaceholder: "Las variaciones aparecerán aquí...",
@@ -553,6 +683,10 @@
         noDriveLinkError: "No hay enlace para navegar. Convierta el enlace primero.",
         noLinkToShortenError: "No hay enlace para acortar. Convierta el enlace primero.", 
         shortenLinkError: "Error al acortar el enlace. Verifique el enlace.", 
+        noLinkForQrError: "No hay enlace para generar el código QR. Convierta/ingrese el enlace primero.", 
+        qrGenerationError: "Error al generar el código QR.", 
+        qrModalTitle: "Código QR para Enlace", // НОВЫЙ ПЕРЕВОД
+        downloadQrBtn: "Descargar", // НОВЫЙ ПЕРЕВОД
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
         loginGenTitle: "Generador de Login de Gmail",
         countLabel: "Cantidad (1-50):",
@@ -567,6 +701,7 @@
         shortenerTitle: "Acortador de Enlaces",
         shortenCustomBtn: "Acortar",
         copyShortenedBtn: "Copiar",
+        generateShortenerQrBtn: "Código QR", 
         shortenerInputPlaceholder: "Pegue el enlace largo",
         customIdInputPlaceholder: "ID personalizado (opcional)",
         // shortenerOutputPlaceholder: "El enlace acortado aparecerá aquí", // УДАЛЕНО
@@ -584,6 +719,7 @@
         copyDriveBtn: "Скопіювати посилання",
         goToLinkBtn: "Перейти за посиланням",
         shortenLinkBtn: "Скоротити посилання", 
+        generateDriveQrBtn: "QR Код", 
         emailCounter: "Варіацій: ",
         emailInputPlaceholder: "Введіть логін або адресу Gmail, наприклад dokyt56fg78",
         gmailOutputPlaceholder: "Тут з'являться варіанти...",
@@ -598,6 +734,10 @@
         noDriveLinkError: "Немає посилання для переходу. Спершу перетворіть посилання.",
         noLinkToShortenError: "Немає посилання для скорочення. Спершу перетворіть посилання.", 
         shortenLinkError: "Помилка при скороченні посилання. Перевірте посилання.",
+        noLinkForQrError: "Немає посилання для генерації QR-коду. Спершу перетворіть/введіть посилання.", 
+        qrGenerationError: "Помилка при генерації QR-коду.",
+        qrModalTitle: "QR-код для посилання", // НОВЫЙ ПЕРЕВОД
+        downloadQrBtn: "Завантажити", // НОВЫЙ ПЕРЕВОД
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
         loginGenTitle: "Генератор логінів Gmail",
         countLabel: "Кількість (1-50):",
@@ -612,6 +752,7 @@
         shortenerTitle: "Укорочувач посилань",
         shortenCustomBtn: "Укоротити",
         copyShortenedBtn: "Скопіювати",
+        generateShortenerQrBtn: "QR Код", 
         shortenerInputPlaceholder: "Вставте довге посилання",
         customIdInputPlaceholder: "Кастомний ID (опціонально)",
         // shortenerOutputPlaceholder: "Скорочене посилання з'явиться тут", // УДАЛЕНО
@@ -649,6 +790,9 @@
       document.getElementById("copyDriveBtn").innerText = t.copyDriveBtn;
       document.getElementById("goToLinkBtn").innerText = t.goToLinkBtn;
       document.getElementById("shortenLinkBtn").innerText = t.shortenLinkBtn; 
+      document.getElementById("generateDriveQrBtn").innerText = t.generateDriveQrBtn; 
+      document.getElementById("qrModalTitle").innerText = t.qrModalTitle; // ОБНОВЛЕНИЕ ДЛЯ МОДАЛКИ
+      document.getElementById("downloadQrBtn").innerText = t.downloadQrBtn; // ОБНОВЛЕНИЕ ДЛЯ МОДАЛКИ
       const currentCount = document.getElementById("gmailOutput").value.split('\n').filter(Boolean).length;
       document.getElementById("emailCounter").innerText = t.emailCounter + currentCount;
       document.getElementById("emailInput").placeholder = t.emailInputPlaceholder;
@@ -669,6 +813,7 @@
       document.getElementById("shortenerTitle").innerText = t.shortenerTitle;
       document.getElementById("shortenCustomBtn").innerText = t.shortenCustomBtn;
       document.getElementById("copyShortenedBtn").innerText = t.copyShortenedBtn;
+      document.getElementById("generateShortenerQrBtn").innerText = t.generateShortenerQrBtn; 
       document.getElementById("shortenerInput").placeholder = t.shortenerInputPlaceholder;
       document.getElementById("customIdInput").placeholder = t.customIdInputPlaceholder;
       // document.getElementById("shortenerOutput").placeholder = t.shortenerOutputPlaceholder; // УДАЛЕНО
@@ -847,11 +992,18 @@
       document.body.removeChild(link);
     }
 
+    // ИЗМЕНЕНА: очищает поле короткой ссылки
     function convertDriveLink() {
       const input = document.getElementById("driveInput").value.trim();
       const output = document.getElementById("driveOutput");
+      const shortDisplay = document.getElementById("driveOutputDisplay"); // НОВАЯ СТРОКА
       const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
+      
+      // Очищаем и скрываем короткую ссылку при новом преобразовании
+      shortDisplay.innerText = ""; // ОБНОВЛЕНО
+      shortDisplay.style.display = "none"; // НОВАЯ СТРОКА
+      
       const match = input.match(/(?:\/d\/|id=|\/file\/d\/|drive\.google\.com\/(?:file\/d\/|open\?id=))([a-zA-Z0-9_-]{10,})/);
       if (match && match[1]) {
         const fileId = match[1];
@@ -862,13 +1014,26 @@
       }
     }
 
+    // ИЗМЕНЕНА: Приоритет копирования короткой ссылки, если она есть
     function copyDrive() {
-      const text = document.getElementById("driveOutput").value;
-      copyToClipboard(text);
+      const shortLink = document.getElementById("driveOutputDisplay").innerText.trim(); // Проверяем короткую
+      const convertedLink = document.getElementById("driveOutput").value; // Проверяем преобразованную
+      const textToCopy = shortLink || convertedLink;
+      const lang = document.documentElement.lang || 'uk';
+      const t = translations[lang];
+      
+      if (!textToCopy.trim()) {
+        alert(t.noDriveLinkError);
+        return;
+      }
+      copyToClipboard(textToCopy);
     }
 
+    // ИЗМЕНЕНА: Приоритет перехода по короткой ссылке, если она есть
     function goToDriveLink() {
-      const link = document.getElementById("driveOutput").value.trim();
+      const shortLink = document.getElementById("driveOutputDisplay").innerText.trim();
+      const convertedLink = document.getElementById("driveOutput").value.trim();
+      const link = shortLink || convertedLink;
       const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
       if (link) {
@@ -880,7 +1045,7 @@
     
     // ФУНКЦИЯ ДЛЯ УКОРАЧИВАНИЯ ССЫЛКИ С ИСПОЛЬЗОВАНИЕМ is.gd
     async function shortenLink(longUrl, outputElementId, customId = null) {
-      // outputElementId может быть "driveOutput" (textarea) или "shortenerOutputDisplay" (div)
+      // outputElementId может быть "driveOutputDisplay" (div) или "shortenerOutputDisplay" (div)
       const outputElement = document.getElementById(outputElementId);
       const lang = document.documentElement.lang || 'uk';
       const t = translations[lang];
@@ -906,14 +1071,9 @@
         const data = await response.json();
         
         if (data.shorturl) {
-          if (outputElementId === "shortenerOutputDisplay") {
-            // Для нового укоротителя: выводим в div
-            outputElement.innerText = data.shorturl;
-            outputElement.style.display = "block";
-          } else {
-            // Для Google Drive: выводим в textarea
-            outputElement.value = data.shorturl;
-          }
+          // Общая логика для вывода в div
+          outputElement.innerText = data.shorturl;
+          outputElement.style.display = "block";
         } else if (data.error) {
           throw new Error(data.error);
         } else {
@@ -921,22 +1081,113 @@
         }
       } catch (error) {
         // Для Drive используем специфичную ошибку
-        const errorMessage = outputElementId === "driveOutput" 
+        const errorMessage = (outputElementId === "driveOutputDisplay" || outputElementId === "driveOutput")
                            ? t.shortenLinkError 
                            : t.shortenGeneralError;
         alert(`${errorMessage} ${error.message || ""}`); 
-        // Скрываем поле вывода, если это новый укоротитель и произошла ошибка
-        if (outputElementId === "shortenerOutputDisplay") {
-            outputElement.style.display = "none";
-        }
+        // Скрываем поле вывода, если произошла ошибка
+        outputElement.style.display = "none";
+        outputElement.innerText = "";
       }
     }
     
-    // ФУНКЦИЯ, ВЫЗЫВАЕМАЯ КНОТКОЙ "Укоротить ссылку" для Google Drive
+    // ИЗМЕНЕНА: Логика получения ссылки и вывода в новый div
     async function shortenDriveLink() {
-      const link = document.getElementById("driveOutput").value.trim();
-      // Выводит в textarea driveOutput
-      await shortenLink(link, "driveOutput"); 
+      // 1. Приоритет берем из преобразованной ссылки (Drive Output)
+      const convertedLink = document.getElementById("driveOutput").value.trim();
+      // 2. Если преобразованной нет, берем из основного поля ввода (Drive Input)
+      const inputLink = document.getElementById("driveInput").value.trim();
+      
+      const urlToShorten = convertedLink || inputLink;
+      
+      if (!urlToShorten) {
+          alert(translations[document.documentElement.lang || 'uk'].noLinkToShortenError);
+          return;
+      }
+      
+      // Выводит в новый div driveOutputDisplay
+      await shortenLink(urlToShorten, "driveOutputDisplay");
+    }
+
+    // НОВАЯ ФУНКЦИЯ: ГЕНЕРАЦИЯ QR-КОДА В МОДАЛЬНОЕ ОКНО
+    function generateQrCode(url) {
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+
+        if (!url) {
+            alert(t.noLinkForQrError);
+            return;
+        }
+
+        // Базовый URL для API QRCode Monkey с параметром download=false
+        // size=300 для хорошего качества
+        const qrApiUrl = `https://api.qrcode-monkey.com/qr/custom?data=${encodeURIComponent(url)}&size=300&file=png&download=false`;
+
+        const modal = document.getElementById("qrCodeModal");
+        const qrImage = document.getElementById("qrCodeImage");
+        
+        // Устанавливаем URL изображения в модальное окно
+        qrImage.src = qrApiUrl;
+        
+        // Показываем модальное окно
+        modal.style.display = "flex";
+    }
+    
+    // Функция для закрытия модального окна
+    function closeModal(event) {
+        const modal = document.getElementById("qrCodeModal");
+        // Закрываем, только если клик был по крестику или по фону
+        if (event.target === modal || event.target.className === "modal-close") {
+            modal.style.display = "none";
+        }
+    }
+    
+    // Функция для скачивания QR-кода
+    function downloadQrCode() {
+        const qrImage = document.getElementById("qrCodeImage");
+        const imageUrl = qrImage.src;
+        
+        // Мы используем тот же API, но с параметром download=true для форсирования загрузки
+        const downloadUrl = imageUrl.replace("download=false", "download=true");
+
+        // Создаем временную ссылку для скачивания
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        // Устанавливаем имя файла для скачивания (добавляем .png)
+        link.download = 'qrcode.png'; 
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Опционально: можно показать тост об успешном сохранении
+        showToast(translations[document.documentElement.lang || 'uk'].copySuccess); 
+    }
+
+
+    // ИЗМЕНЕНА: Приоритет генерации QR-кода для короткой ссылки, если она есть
+    function generateDriveQr() {
+        const shortLink = document.getElementById("driveOutputDisplay").innerText.trim();
+        const convertedLink = document.getElementById("driveOutput").value.trim();
+        const link = shortLink || convertedLink;
+        
+        if (!link) {
+            alert(translations[document.documentElement.lang || 'uk'].noLinkForQrError);
+            return;
+        }
+        generateQrCode(link);
+    }
+
+    // НОВАЯ ФУНКЦИЯ: ГЕНЕРАЦИЯ QR-КОДА ДЛЯ УКОРОТИТЕЛЯ ССЫЛОК
+    function generateShortenerQr() {
+        // Предпочитаем брать укороченную ссылку, если она есть
+        let link = document.getElementById("shortenerOutputDisplay").innerText.trim();
+        
+        // Если укороченной ссылки нет, берем длинную ссылку из поля ввода
+        if (!link) {
+            link = document.getElementById("shortenerInput").value.trim();
+        }
+
+        generateQrCode(link);
     }
     
     // ===============================================
