@@ -90,8 +90,8 @@
         display: flex;
         gap: 20px; /* Расстояние между окнами */
         width: 100%;
-        /* Увеличена максимальная ширина для 4 колонок (4*320 + 3*gap) */
-        max-width: 1380px; 
+        /* Увеличена максимальная ширина для 5 колонок (5*320 + 4*gap) */
+        max-width: 1720px; 
         justify-content: center;
         flex-wrap: wrap; /* Позволяет окнам переноситься на новую строку на маленьких экранах */
     }
@@ -119,7 +119,8 @@
     /* INPUTS & TEXTAREAS */
     input[type="text"],
     textarea,
-    input[type="number"] { /* Добавлен стили для input type="number" */
+    input[type="number"],
+    input[type="file"] { /* Добавлен стили для input type="file" */
       padding: 12px 15px; /* Немного уменьшены отступы */
       border: 1px solid var(--border-color);
       border-radius: 10px;
@@ -134,6 +135,12 @@
     /* Стилизация для поля ввода количества логинов */
     #countInput {
         text-align: center;
+    }
+
+    /* Специальный стиль для поля выбора файла, чтобы оно выглядело лучше */
+    input[type="file"] {
+        padding: 10px 15px;
+        cursor: pointer;
     }
 
 
@@ -209,6 +216,17 @@
     }
     
     /* Стили для кнопок, которые не являются первой в ряду (для нового укорочителя) */
+    .tool:nth-child(4) .button-row button:first-child { 
+        background: var(--primary-color);
+        color: var(--secondary-color);
+    }
+    
+    .tool:nth-child(4) .button-row button:not(:first-child) { 
+        background: #e9e9e9;
+        color: var(--text-color);
+    }
+    
+    /* Стили для кнопок, которые не являются первой в ряду (для M3U) */
     .tool:last-child .button-row button:first-child { 
         background: var(--primary-color);
         color: var(--secondary-color);
@@ -237,6 +255,7 @@
     }
     
     .tool:nth-child(3) .button-row button:not(:first-child):hover,
+    .tool:nth-child(4) .button-row button:not(:first-child):hover,
     .tool:last-child .button-row button:not(:first-child):hover {
         background: #d8d8d8;
     }
@@ -411,6 +430,11 @@
     }
     
     /* MEDIA QUERIES - Vertical layout for smaller screens */
+    @media (max-width: 1730px) { /* Изменено для 5-х колонок (для 4-х колонок) */
+        .tool-container {
+            max-width: 1380px; /* 4 колонки */
+        }
+    }
     @media (max-width: 1390px) { /* Изменено для 4-х колонок (для 3-х колонок) */
         .tool-container {
             max-width: 1040px; /* 3 колонки */
@@ -472,7 +496,7 @@
         <div class="button-row">
           <button onclick="generateGmailVariations()" id="generateBtn">Сгенерировать</button>
           <button onclick="copyGmail()" id="copyBtn">Скопировать всё</button>
-          <button onclick="downloadGmail()" id="downloadTxtBtn">Скачать .txt</button>
+          <button onclick="downloadTxtBtn" id="downloadTxtBtn">Скачать .txt</button>
           <button onclick="downloadCSV()" id="downloadCsvBtn">Экспорт в CSV</button>
         </div>
         <textarea id="gmailOutput" placeholder="Здесь появятся варианты..." readonly></textarea>
@@ -509,8 +533,21 @@
           <button onclick="generateShortenerQr()" id="generateShortenerQrBtn">QR Код</button>
         </div>
         </div>
-      
-  </div>
+        
+        <div class="tool">
+            <h2 id="m3uTitle">Парсер M3U Плейлистов</h2>
+            <div class="input-label" id="m3uFileLabel">Выберите файл .m3u или .m3u8:</div>
+            <input type="file" id="m3uFileInput" accept=".m3u,.m3u8" onchange="parseM3UFile()">
+            
+            <div id="m3uCounter" class="email-counter">Найдено: 0</div>
+            
+            <div class="button-row">
+                <button onclick="copyM3UOutput()" id="copyM3UBtn">Скопировать всё</button>
+                <button onclick="downloadM3UOutput()" id="downloadM3UTxtBtn">Скачать .txt</button>
+            </div>
+            <textarea id="m3uOutput" placeholder="Здесь появятся отсортированные названия каналов..." readonly></textarea>
+        </div>
+        </div>
   
   <div id="toastNotification">Скопировано!</div>
 
@@ -610,9 +647,18 @@
         generateShortenerQrBtn: "QR Код", 
         shortenerInputPlaceholder: "Вставьте длинную ссылку",
         customIdInputPlaceholder: "Кастомный ID (опционально)",
-        // shortenerOutputPlaceholder: "Укороченная ссылка появится здесь", // УДАЛЕНО
         noLinkToShortenGeneralError: "Введите ссылку для укорачивания.",
         shortenGeneralError: "Ошибка при укорачивании ссылки:",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
+        m3uTitle: "Парсер M3U Плейлистов",
+        m3uFileLabel: "Выберите файл .m3u или .m3u8:",
+        m3uCounter: "Найдено: ",
+        copyM3UBtn: "Скопировать всё",
+        downloadM3UTxtBtn: "Скачать .txt",
+        m3uOutputPlaceholder: "Здесь появятся отсортированные названия каналов...",
+        noM3UDataError: "Нет данных для сохранения. Сначала загрузите и обработайте файл.",
+        m3uReadError: "Ошибка при чтении файла: ",
+        noChannelsFound: "Каналы не найдены в плейлисте.",
       },
       en: {
         gmailTitle: "Gmail Address Variations",
@@ -663,9 +709,18 @@
         generateShortenerQrBtn: "QR Code", 
         shortenerInputPlaceholder: "Paste long link",
         customIdInputPlaceholder: "Custom ID (optional)",
-        // shortenerOutputPlaceholder: "Shortened link will appear here", // УДАЛЕНО
         noLinkToShortenGeneralError: "Enter a link to shorten.",
         shortenGeneralError: "Error shortening link:",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
+        m3uTitle: "M3U Playlist Parser",
+        m3uFileLabel: "Select .m3u or .m3u8 file:",
+        m3uCounter: "Found: ",
+        copyM3UBtn: "Copy All",
+        downloadM3UTxtBtn: "Download .txt",
+        m3uOutputPlaceholder: "Sorted channel names will appear here...",
+        noM3UDataError: "No data to save. Load and process a file first.",
+        m3uReadError: "Error reading file: ",
+        noChannelsFound: "No channels found in the playlist.",
       },
       es: {
         gmailTitle: "Variaciones de Gmail",
@@ -716,9 +771,18 @@
         generateShortenerQrBtn: "Código QR", 
         shortenerInputPlaceholder: "Pegue el enlace largo",
         customIdInputPlaceholder: "ID personalizado (opcional)",
-        // shortenerOutputPlaceholder: "El enlace acortado aparecerá aquí", // УДАЛЕНО
         noLinkToShortenGeneralError: "Ingrese un enlace para acortar.",
         shortenGeneralError: "Error al acortar el enlace:",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
+        m3uTitle: "Analizador de Listas M3U",
+        m3uFileLabel: "Seleccione archivo .m3u o .m3u8:",
+        m3uCounter: "Encontrado: ",
+        copyM3UBtn: "Copiar todo",
+        downloadM3UTxtBtn: "Descargar .txt",
+        m3uOutputPlaceholder: "Los nombres de canal ordenados aparecerán aquí...",
+        noM3UDataError: "No hay datos para guardar. Cargue y procese un archivo primero.",
+        m3uReadError: "Error al leer el archivo: ",
+        noChannelsFound: "No se encontraron canales en la lista de reproducción.",
       },
       uk: { 
         gmailTitle: "Варіації пошти Gmail",
@@ -769,9 +833,18 @@
         generateShortenerQrBtn: "QR Код", 
         shortenerInputPlaceholder: "Вставте довге посилання",
         customIdInputPlaceholder: "Кастомний ID (опціонально)",
-        // shortenerOutputPlaceholder: "Скорочене посилання з'явиться тут", // УДАЛЕНО
         noLinkToShortenGeneralError: "Введіть посилання для скорочення.",
         shortenGeneralError: "Помилка при скороченні посилання:",
+        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
+        m3uTitle: "Парсер M3U Плейлистів",
+        m3uFileLabel: "Оберіть файл .m3u або .m3u8:",
+        m3uCounter: "Знайдено: ",
+        copyM3UBtn: "Скопіювати все",
+        downloadM3UTxtBtn: "Завантажити .txt",
+        m3uOutputPlaceholder: "Тут з'являться відсортовані назви каналів...",
+        noM3UDataError: "Немає даних для збереження. Спершу завантажте та обробіть файл.",
+        m3uReadError: "Помилка при читанні файлу: ",
+        noChannelsFound: "Канали не знайдено у плейлисті.",
       }
     };
 
@@ -831,7 +904,16 @@
       document.getElementById("generateShortenerQrBtn").innerText = t.generateShortenerQrBtn; 
       document.getElementById("shortenerInput").placeholder = t.shortenerInputPlaceholder;
       document.getElementById("customIdInput").placeholder = t.customIdInputPlaceholder;
-      // document.getElementById("shortenerOutput").placeholder = t.shortenerOutputPlaceholder; // УДАЛЕНО
+      
+      // ОБНОВЛЕНИЕ ДЛЯ M3U ПАРСЕРА
+      document.getElementById("m3uTitle").innerText = t.m3uTitle;
+      document.getElementById("m3uFileLabel").innerText = t.m3uFileLabel;
+      document.getElementById("copyM3UBtn").innerText = t.copyM3UBtn;
+      document.getElementById("downloadM3UTxtBtn").innerText = t.downloadM3UTxtBtn;
+      document.getElementById("m3uOutput").placeholder = t.m3uOutputPlaceholder;
+      // Обновление счетчика для M3U
+      const currentM3UCount = document.getElementById("m3uOutput").value.split('\n').filter(Boolean).length;
+      document.getElementById("m3uCounter").innerText = t.m3uCounter + currentM3UCount;
     }
     
     document.addEventListener('DOMContentLoaded', () => {
@@ -1447,6 +1529,108 @@
 
     // ===============================================
     // КОНЕЦ НОВЫХ ФУНКЦИЙ ДЛЯ УКОРОТИТЕЛЯ ССЫЛОК
+    // ===============================================
+
+    // ===============================================
+    // НОВЫЕ ФУНКЦИИ ДЛЯ M3U ПАРСЕРА
+    // ===============================================
+
+    function parseM3UFile() {
+        const fileInput = document.getElementById("m3uFileInput");
+        const output = document.getElementById("m3uOutput");
+        const counter = document.getElementById("m3uCounter");
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+
+        output.value = "";
+        counter.innerText = t.m3uCounter + "0";
+
+        const file = fileInput.files[0];
+        if (!file) {
+            return; 
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const content = e.target.result;
+                const lines = content.split('\n');
+                const channelNames = new Set();
+                
+                // Регулярное выражение для извлечения названия канала
+                // #EXTINF:-1 group-title="NEWS",Название канала
+                // или #EXTINF:-1,Название канала
+                const extinfRegex = /#EXTINF:.*,(.+)/;
+
+                lines.forEach(line => {
+                    const match = line.match(extinfRegex);
+                    if (match && match[1]) {
+                        // Очищаем и добавляем название канала
+                        let channelName = match[1].trim();
+                        if (channelName) {
+                           channelNames.add(channelName);
+                        }
+                    }
+                });
+
+                const sortedChannels = Array.from(channelNames).sort((a, b) => {
+                    // Используем localeCompare для правильной сортировки строк с учетом локали
+                    return a.localeCompare(b, lang, { sensitivity: 'base' });
+                });
+
+                if (sortedChannels.length > 0) {
+                    output.value = sortedChannels.join("\n");
+                    counter.innerText = t.m3uCounter + sortedChannels.length;
+                } else {
+                    output.value = "";
+                    counter.innerText = t.m3uCounter + "0";
+                    alert(t.noChannelsFound);
+                }
+
+            } catch (error) {
+                output.value = "";
+                counter.innerText = t.m3uCounter + "0";
+                alert(t.m3uReadError + error.message);
+            }
+        };
+
+        reader.onerror = function() {
+            output.value = "";
+            counter.innerText = t.m3uCounter + "0";
+            alert(t.m3uReadError + reader.error.message);
+        };
+
+        // Читаем файл как текст
+        reader.readAsText(file);
+    }
+    
+    function copyM3UOutput() {
+        const text = document.getElementById("m3uOutput").value;
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        
+        if (!text.trim()) {
+            alert(t.noM3UDataError);
+            return;
+        }
+        copyToClipboard(text);
+    }
+
+    function downloadM3UOutput() {
+        const text = document.getElementById("m3uOutput").value;
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        
+        if (!text.trim()) {
+            alert(t.noM3UDataError);
+            return;
+        }
+        // Загружаем в .txt файл
+        downloadTextFile("m3u_channels.txt", text);
+    }
+
+    // ===============================================
+    // КОНЕЦ НОВЫХ ФУНКЦИЙ ДЛЯ M3U ПАРСЕРА
     // ===============================================
 
   </script>
