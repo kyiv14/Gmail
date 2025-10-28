@@ -496,7 +496,7 @@
         <div class="button-row">
           <button onclick="generateGmailVariations()" id="generateBtn">Сгенерировать</button>
           <button onclick="copyGmail()" id="copyBtn">Скопировать всё</button>
-          <button onclick="downloadTxtBtn" id="downloadTxtBtn">Скачать .txt</button>
+          <button onclick="downloadGmail()" id="downloadTxtBtn">Скачать .txt</button>
           <button onclick="downloadCSV()" id="downloadCsvBtn">Экспорт в CSV</button>
         </div>
         <textarea id="gmailOutput" placeholder="Здесь появятся варианты..." readonly></textarea>
@@ -536,8 +536,8 @@
         
         <div class="tool">
             <h2 id="m3uTitle">Парсер M3U Плейлистов</h2>
-            <div class="input-label" id="m3uFileLabel">Выберите файл .m3u или .m3u8:</div>
-            <input type="file" id="m3uFileInput" accept=".m3u,.m3u8" onchange="parseM3UFile()">
+            <div class="input-label" id="m3uFileLabel">Выберите файл .m3u, .m3u8 или .txt:</div>
+            <input type="file" id="m3uFileInput" accept=".m3u,.m3u8,.txt" onchange="parseM3UFile()">
             
             <div id="m3uCounter" class="email-counter">Найдено: 0</div>
             
@@ -651,7 +651,7 @@
         shortenGeneralError: "Ошибка при укорачивании ссылки:",
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Парсер M3U Плейлистов",
-        m3uFileLabel: "Выберите файл .m3u или .m3u8:",
+        m3uFileLabel: "Выберите файл .m3u, .m3u8 или .txt:",
         m3uCounter: "Найдено: ",
         copyM3UBtn: "Скопировать всё",
         downloadM3UTxtBtn: "Скачать .txt",
@@ -713,7 +713,7 @@
         shortenGeneralError: "Error shortening link:",
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "M3U Playlist Parser",
-        m3uFileLabel: "Select .m3u or .m3u8 file:",
+        m3uFileLabel: "Select .m3u, .m3u8 or .txt file:",
         m3uCounter: "Found: ",
         copyM3UBtn: "Copy All",
         downloadM3UTxtBtn: "Download .txt",
@@ -775,7 +775,7 @@
         shortenGeneralError: "Error al acortar el enlace:",
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Analizador de Listas M3U",
-        m3uFileLabel: "Seleccione archivo .m3u o .m3u8:",
+        m3uFileLabel: "Seleccione archivo .m3u, .m3u8 o .txt:",
         m3uCounter: "Encontrado: ",
         copyM3UBtn: "Copiar todo",
         downloadM3UTxtBtn: "Descargar .txt",
@@ -837,7 +837,7 @@
         shortenGeneralError: "Помилка при скороченні посилання:",
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Парсер M3U Плейлистів",
-        m3uFileLabel: "Оберіть файл .m3u або .m3u8:",
+        m3uFileLabel: "Оберіть файл .m3u, .m3u8 або .txt:",
         m3uCounter: "Знайдено: ",
         copyM3UBtn: "Скопіювати все",
         downloadM3UTxtBtn: "Завантажити .txt",
@@ -1625,8 +1625,14 @@
             alert(t.noM3UDataError);
             return;
         }
+        
+        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Формирование имени файла ---
+        const channelCount = text.split('\n').filter(Boolean).length;
+        const filename = `m3u_${channelCount}`;
+        // --------------------------------------------------
+        
         // Загружаем в .txt файл
-        downloadTextFile("m3u_channels.txt", text);
+        downloadTextFile(filename, text);
     }
 
     // ===============================================
