@@ -119,8 +119,7 @@
     /* INPUTS & TEXTAREAS */
     input[type="text"],
     textarea,
-    input[type="number"],
-    input[type="file"] { /* Добавлен стили для input type="file" */
+    input[type="number"] { /* input[type="file"] теперь скрыт */
       padding: 12px 15px; /* Немного уменьшены отступы */
       border: 1px solid var(--border-color);
       border-radius: 10px;
@@ -136,13 +135,6 @@
     #countInput {
         text-align: center;
     }
-
-    /* Специальный стиль для поля выбора файла, чтобы оно выглядело лучше */
-    input[type="file"] {
-        padding: 10px 15px;
-        cursor: pointer;
-    }
-
 
     input[type="text"]:focus,
     textarea:focus,
@@ -180,7 +172,9 @@
       margin-bottom: 15px;
     }
 
-    .button-row button {
+    /* Стиль для ВСЕХ кнопок внутри .button-row, включая имитацию кнопки-метки */
+    .button-row button,
+    .button-row label { /* Добавлен label */
       flex: 1;
       width: 100%; 
       padding: 14px 12px; /* Отступы для центрирования и удобства */
@@ -194,6 +188,11 @@
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(220, 38, 37, 0.2);
       transition: all var(--transition-duration) ease;
+      /* Дополнительные стили для label, чтобы он вел себя как кнопка */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0; /* Перекрываем стандартный margin для button-row */
     }
     
     /* Secondary Button Style */
@@ -202,20 +201,37 @@
       color: var(--text-color);
       box-shadow: none;
     }
+
+    /* Стиль для метки, имитирующей кнопку, чтобы она выглядела как основная кнопка (primary) */
+    .tool:last-child .button-row label {
+        background: var(--primary-color);
+        color: var(--secondary-color);
+        box-shadow: 0 2px 4px rgba(220, 38, 37, 0.2);
+    }
     
-    /* Стили для кнопок, которые не являются первой в ряду (для генератора логинов) */
+    /* Стиль для кнопки-метки при hover */
+    .tool:last-child .button-row label:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    
+    /* Стиль для кнопки-метки при active */
+    .tool:last-child .button-row label:active {
+        transform: translateY(1px) scale(0.99); 
+        box-shadow: 0 1px 2px rgba(220, 38, 37, 0.2);
+    }
+    
+    /* Остальные стили для кнопок (без изменений, но для полноты) */
     .tool:nth-child(3) .button-row button:first-child { 
         background: var(--primary-color);
         color: var(--secondary-color);
     }
     
-    /* Стили для кнопок, которые не являются первой в ряду */
     .tool:nth-child(3) .button-row button:not(:first-child) { 
         background: #e9e9e9;
         color: var(--text-color);
     }
     
-    /* Стили для кнопок, которые не являются первой в ряду (для нового укорочителя) */
     .tool:nth-child(4) .button-row button:first-child { 
         background: var(--primary-color);
         color: var(--secondary-color);
@@ -226,18 +242,7 @@
         color: var(--text-color);
     }
     
-    /* Стили для кнопок, которые не являются первой в ряду (для M3U) */
-    .tool:last-child .button-row button:first-child { 
-        background: var(--primary-color);
-        color: var(--secondary-color);
-    }
-    
-    .tool:last-child .button-row button:not(:first-child) { 
-        background: #e9e9e9;
-        color: var(--text-color);
-    }
-    
-    
+    /* Остальные стили для кнопок (без изменений, но для полноты) */
     .button-row button:hover {
       opacity: 0.9;
       transform: translateY(-1px); 
@@ -248,7 +253,6 @@
       box-shadow: 0 1px 2px rgba(220, 38, 37, 0.2);
     }
     
-    /* Secondary Button Hover/Active */
     .button-row button:not(:first-child):hover {
       background: #d8d8d8;
       opacity: 1;
@@ -536,8 +540,12 @@
         
         <div class="tool">
             <h2 id="m3uTitle">Парсер M3U Плейлистов</h2>
-            <div class="input-label" id="m3uFileLabel">Выберите файл .m3u, .m3u8 или .txt:</div>
-            <input type="file" id="m3uFileInput" accept=".m3u,.m3u8,.txt" onchange="parseM3UFile()">
+            
+            <input type="file" id="m3uFileInput" accept=".m3u,.m3u8,.txt" onchange="parseM3UFile()" style="display: none;">
+            
+            <div class="button-row" style="margin-bottom: 15px;">
+                <label for="m3uFileInput" id="m3uFileLabel">Выберите файл .m3u, .m3u8 или .txt</label>
+            </div>
             
             <div id="m3uCounter" class="email-counter">Найдено: 0</div>
             
@@ -651,7 +659,7 @@
         shortenGeneralError: "Ошибка при укорачивании ссылки:",
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Парсер M3U Плейлистов",
-        m3uFileLabel: "Выберите файл .m3u, .m3u8 или .txt:",
+        m3uFileLabel: "Выберите файл .m3u, .m3u8 или .txt", // Текст кнопки
         m3uCounter: "Найдено: ",
         copyM3UBtn: "Скопировать всё",
         downloadM3UTxtBtn: "Скачать .txt",
@@ -713,7 +721,7 @@
         shortenGeneralError: "Error shortening link:",
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "M3U Playlist Parser",
-        m3uFileLabel: "Select .m3u, .m3u8 or .txt file:",
+        m3uFileLabel: "Select .m3u, .m3u8 or .txt file", // Текст кнопки
         m3uCounter: "Found: ",
         copyM3UBtn: "Copy All",
         downloadM3UTxtBtn: "Download .txt",
@@ -775,7 +783,7 @@
         shortenGeneralError: "Error al acortar el enlace:",
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Analizador de Listas M3U",
-        m3uFileLabel: "Seleccione archivo .m3u, .m3u8 o .txt:",
+        m3uFileLabel: "Seleccione archivo .m3u, .m3u8 o .txt", // Текст кнопки
         m3uCounter: "Encontrado: ",
         copyM3UBtn: "Copiar todo",
         downloadM3UTxtBtn: "Descargar .txt",
@@ -837,7 +845,7 @@
         shortenGeneralError: "Помилка при скороченні посилання:",
         // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Парсер M3U Плейлистів",
-        m3uFileLabel: "Оберіть файл .m3u, .m3u8 або .txt:",
+        m3uFileLabel: "Оберіть файл .m3u, .m3u8 або .txt", // Текст кнопки
         m3uCounter: "Знайдено: ",
         copyM3UBtn: "Скопіювати все",
         downloadM3UTxtBtn: "Завантажити .txt",
@@ -907,7 +915,8 @@
       
       // ОБНОВЛЕНИЕ ДЛЯ M3U ПАРСЕРА
       document.getElementById("m3uTitle").innerText = t.m3uTitle;
-      document.getElementById("m3uFileLabel").innerText = t.m3uFileLabel;
+      // ИЗМЕНЕНИЕ ЗДЕСЬ: Обновляем текст кнопки-метки
+      document.getElementById("m3uFileLabel").innerText = t.m3uFileLabel; 
       document.getElementById("copyM3UBtn").innerText = t.copyM3UBtn;
       document.getElementById("downloadM3UTxtBtn").innerText = t.downloadM3UTxtBtn;
       document.getElementById("m3uOutput").placeholder = t.m3uOutputPlaceholder;
@@ -1626,10 +1635,9 @@
             return;
         }
         
-        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Формирование имени файла ---
+        // Формирование имени файла: m3u_количество_channels.txt
         const channelCount = text.split('\n').filter(Boolean).length;
-        const filename = `m3u_${channelCount}`;
-        // --------------------------------------------------
+        const filename = `m3u_${channelCount}_channels.txt`;
         
         // Загружаем в .txt файл
         downloadTextFile(filename, text);
