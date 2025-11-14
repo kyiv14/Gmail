@@ -20,9 +20,10 @@
     /* BASE STYLES */
     * { 
       box-sizing: border-box; 
-      font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+      /* Установка шрифта Montserrat */
+      font-family: 'Montserrat', 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
     }
-
+    
     body {
       margin: 0;
       padding: 30px 20px;
@@ -109,6 +110,8 @@
       display: flex;
       flex-direction: column;
       transition: transform var(--transition-duration) ease, box-shadow var(--transition-duration) ease; 
+      /* Добавлено для drag and drop */
+      position: relative;
     }
     
     .tool:hover {
@@ -203,20 +206,21 @@
     }
 
     /* Стиль для метки, имитирующей кнопку, чтобы она выглядела как основная кнопка (primary) */
-    .tool:last-child .button-row label {
+    /* Теперь это .tool:nth-child(5) */
+    .tool:nth-child(5) .button-row label {
         background: var(--primary-color);
         color: var(--secondary-color);
         box-shadow: 0 2px 4px rgba(220, 38, 37, 0.2);
     }
     
     /* Стиль для кнопки-метки при hover */
-    .tool:last-child .button-row label:hover {
+    .tool:nth-child(5) .button-row label:hover {
         opacity: 0.9;
         transform: translateY(-1px);
     }
     
     /* Стиль для кнопки-метки при active */
-    .tool:last-child .button-row label:active {
+    .tool:nth-child(5) .button-row label:active {
         transform: translateY(1px) scale(0.99); 
         box-shadow: 0 1px 2px rgba(220, 38, 37, 0.2);
     }
@@ -260,22 +264,81 @@
     
     .tool:nth-child(3) .button-row button:not(:first-child):hover,
     .tool:nth-child(4) .button-row button:not(:first-child):hover,
-    .tool:last-child .button-row button:not(:first-child):hover {
+    .tool:nth-child(5) .button-row button:not(:first-child):hover,
+    .tool:last-child .button-row button:not(:first-child):hover { /* Добавлено last-child */
         background: #d8d8d8;
     }
     
+    /* --- Стили для Drag and Drop (новое окно) --- */
+    /* ИЗМЕНЕНИЕ СТИЛЕЙ: Делаем DropZone похожей на основную кнопку */
+    #m3uKeyDropZone {
+        position: relative;
+        /* Копируем стили основной кнопки */
+        background: var(--primary-color);
+        color: var(--secondary-color);
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(220, 38, 37, 0.2);
+        
+        border: 2px dashed rgba(255, 255, 255, 0.5); /* Белый пунктир для контраста */
+        border-radius: 10px;
+        padding: 15px; /* Уменьшаем отступы, чтобы она выглядела более компактно */
+        text-align: center;
+        margin-bottom: 15px;
+        transition: all var(--transition-duration) ease;
+        cursor: pointer; 
+        
+        /* Убедимся, что внутренние элементы наследуют белый цвет */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    /* Стиль при наведении курсора */
+    #m3uKeyDropZone:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220, 38, 37, 0.3);
+    }
+
+    #m3uKeyDropZone.drag-over {
+        border-color: var(--secondary-color); /* Белая рамка при перетаскивании */
+        background: #b92020; /* Немного темнее красный */
+    }
+
+    #m3uKeyDropZone p {
+        margin: 3px 0; /* Уменьшаем вертикальные отступы для компактности */
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--secondary-color); /* Белый шрифт */
+    }
+
+    /* Стиль для отображения имени загруженного файла */
+    #m3uFileName {
+        display: block;
+        margin-top: 5px; /* Уменьшаем отступ */
+        font-size: 14px;
+        font-weight: 700;
+        color: #ffdddd; /* Светло-красный для контраста на красном фоне */
+    }
+    
+    /* НОВОЕ ПОЛЕ: Отображение найденного ключа */
+    #m3uOldKeyDisplay {
+        display: none; /* Скрыто по умолчанию */
+        font-size: 18px;
+        font-weight: 700; /* Жирный */
+        color: var(--primary-color); /* Красный */
+        text-align: center; /* Центрирование */
+        padding: 10px 0;
+        margin-bottom: 15px;
+        word-break: break-all;
+    }
+
 
     /* EMAIL COUNTER */
     .email-counter {
-      background: #f7f7f9; 
-      padding: 10px; /* Немного уменьшен отступ */
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      text-align: center;
-      font-size: 16px; /* Немного уменьшен размер шрифта */
-      font-weight: 700;
-      color: var(--primary-color); 
-      margin-bottom: 15px;
+      /* ИЗМЕНЕНИЕ: Удаление стилей для скрытия элемента */
+      display: none; 
     }
     
     /* LABEL STYLE */
@@ -500,7 +563,7 @@
         <div class="button-row">
           <button onclick="generateGmailVariations()" id="generateBtn">Сгенерировать</button>
           <button onclick="copyGmail()" id="copyBtn">Скопировать всё</button>
-          <button onclick="downloadGmail()" id="downloadTxtBtn">Скачать .txt</button>
+          <button onclick="downloadTxtBtn" id="downloadTxtBtn">Скачать .txt</button>
           <button onclick="downloadCSV()" id="downloadCsvBtn">Экспорт в CSV</button>
         </div>
         <textarea id="gmailOutput" placeholder="Здесь появятся варианты..." readonly></textarea>
@@ -555,6 +618,29 @@
             </div>
             <textarea id="m3uOutput" placeholder="Здесь появятся отсортированные названия каналов..." readonly></textarea>
         </div>
+        
+        <div class="tool">
+            <h2 id="m3uKeyTitle">Редактор ключей M3U Плейлистов</h2>
+
+            <label for="m3uFileKeyInput" id="m3uKeyDropZone" 
+                 ondragover="handleDragOver(event)" 
+                 ondragleave="handleDragLeave(event)" 
+                 ondrop="handleDrop(event)">
+                <p id="m3uKeyDragDropText">Перетащите файл .m3u, .m3u8 или .txt сюда</p>
+                <p id="m3uKeyClickText">или нажмите, чтобы выбрать файл</p> 
+                <span id="m3uFileName"></span>
+            </label>
+            
+            <input type="file" id="m3uFileKeyInput" accept=".m3u,.m3u8,.txt" onchange="loadM3UFileForEdit(this.files)" style="display: none;">
+
+            <div id="m3uOldKeyDisplay" style="display:none;"></div>
+            
+            <input type="text" id="newKeyInput" placeholder="Введите новый ключ (например, A7X7L9J834QK5P)">
+            
+            <div class="button-row">
+                <button onclick="downloadNewM3U()" id="downloadNewM3UBtn">Скачать с новым ключом</button>
+            </div>
+        </div>
         </div>
   
   <div id="toastNotification">Скопировано!</div>
@@ -605,6 +691,11 @@
     }
     // --- END: Existing Helper Functions ---
 
+    // ГЛОБАЛЬНАЯ ПЕРЕМЕННАЯ ДЛЯ ХРАНЕНИЯ СОДЕРЖИМОГО M3U
+    let m3uKeyFileContent = null;
+    let m3uKeyFileName = null;
+
+
     const translations = {
       ru: {
         gmailTitle: "Вариации почты Gmail",
@@ -636,7 +727,7 @@
         qrGenerationError: "Ошибка при генерации QR-кода.", 
         qrModalTitle: "QR-код для ссылки", 
         downloadQrBtn: "Сохранить", 
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+        // ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
         loginGenTitle: "Генератор логинов Gmail",
         countLabel: "Количество (1-50):",
         lengthLabel: "Длина логина (6-20):", 
@@ -648,7 +739,7 @@
         invalidLengthError: "Длина должна быть от 6 до 20 символов.", 
         noLoginsToCopyError: "Нет сгенерированных логинов для копирования.",
         noLoginsToSaveError: "Нет сгенерированных логинов для сохранения.", 
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
+        // ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
         shortenerTitle: "Укоротитель ссылок",
         shortenCustomBtn: "Укоротить",
         copyShortenedBtn: "Скопировать",
@@ -657,7 +748,7 @@
         customIdInputPlaceholder: "Кастомный ID (опционально)",
         noLinkToShortenGeneralError: "Введите ссылку для укорачивания.",
         shortenGeneralError: "Ошибка при укорачивании ссылки:",
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
+        // ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Парсер M3U Плейлистов",
         m3uFileLabel: "Выберите файл .m3u, .m3u8 или .txt", // Текст кнопки
         m3uCounter: "Найдено: ",
@@ -667,6 +758,17 @@
         noM3UDataError: "Нет данных для сохранения. Сначала загрузите и обработайте файл.",
         m3uReadError: "Ошибка при чтении файла: ",
         noChannelsFound: "Каналы не найдены в плейлисте.",
+        // ПЕРЕВОДЫ ДЛЯ РЕДАКТОРА КЛЮЧЕЙ M3U (НОВЫЕ)
+        m3uKeyTitle: "Редактор ключей M3U Плейлистов",
+        newKeyInputPlaceholder: "Введите новый ключ (например, A7X7L9J834QK5P)",
+        downloadNewM3UBtn: "Скачать с новым ключом",
+        m3uKeyCounter: "Статус: Нет файла", // Оставим для alert/error, но не используем в HTML
+        m3uKeyDragDropText: "Перетащите файл .m3u, .m3u8 или .txt сюда",
+        m3uKeyClickText: "или нажмите, чтобы выбрать файл",
+        m3uOldKeyDisplay: "", 
+        noKeyEntered: "Введите новый ключ для замены.",
+        noFileLoaded: "Сначала загрузите файл плейлиста M3U.",
+        keyReplaceSuccess: "Ключ успешно заменен в {count} ссылках."
       },
       en: {
         gmailTitle: "Gmail Address Variations",
@@ -698,7 +800,7 @@
         qrGenerationError: "Error generating QR code.", 
         qrModalTitle: "QR Code for Link", 
         downloadQrBtn: "Download", 
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+        // ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
         loginGenTitle: "Gmail Login Generator",
         countLabel: "Count (1-50):",
         lengthLabel: "Login Length (6-20):", 
@@ -710,7 +812,7 @@
         invalidLengthError: "Length must be between 6 and 20 characters.", 
         noLoginsToCopyError: "No generated logins to copy.",
         noLoginsToSaveError: "No generated logins to save.", 
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
+        // ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
         shortenerTitle: "Link Shortener",
         shortenCustomBtn: "Shorten",
         copyShortenedBtn: "Copy",
@@ -719,7 +821,7 @@
         customIdInputPlaceholder: "Custom ID (optional)",
         noLinkToShortenGeneralError: "Enter a link to shorten.",
         shortenGeneralError: "Error shortening link:",
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
+        // ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "M3U Playlist Parser",
         m3uFileLabel: "Select .m3u, .m3u8 or .txt file", // Текст кнопки
         m3uCounter: "Found: ",
@@ -729,6 +831,17 @@
         noM3UDataError: "No data to save. Load and process a file first.",
         m3uReadError: "Error reading file: ",
         noChannelsFound: "No channels found in the playlist.",
+        // ПЕРЕВОДЫ ДЛЯ РЕДАКТОРА КЛЮЧЕЙ M3U (НОВЫЕ)
+        m3uKeyTitle: "M3U Playlist Key Editor",
+        newKeyInputPlaceholder: "Enter new key (e.g., A7X7L9J834QK5P)",
+        downloadNewM3UBtn: "Download with New Key",
+        m3uKeyCounter: "Status: No file",
+        m3uKeyDragDropText: "Drag and drop .m3u, .m3u8 or .txt file here",
+        m3uKeyClickText: "or click to select file",
+        m3uOldKeyDisplay: "", 
+        noKeyEntered: "Enter a new key for replacement.",
+        noFileLoaded: "Load an M3U playlist file first.",
+        keyReplaceSuccess: "Key successfully replaced in {count} links."
       },
       es: {
         gmailTitle: "Variaciones de Gmail",
@@ -760,7 +873,7 @@
         qrGenerationError: "Error al generar el código QR.", 
         qrModalTitle: "Código QR para Enlace", 
         downloadQrBtn: "Descargar", 
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+        // ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
         loginGenTitle: "Generador de Login de Gmail",
         countLabel: "Cantidad (1-50):",
         lengthLabel: "Longitud del Login (6-20):", 
@@ -772,7 +885,7 @@
         invalidLengthError: "La longitud debe ser entre 6 и 20 caracteres.", 
         noLoginsToCopyError: "No hay logins generados para copiar.",
         noLoginsToSaveError: "No hay logins generados para guardar.", 
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
+        // ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
         shortenerTitle: "Acortador de Enlaces",
         shortenCustomBtn: "Acortar",
         copyShortenedBtn: "Copiar",
@@ -781,7 +894,7 @@
         customIdInputPlaceholder: "ID personalizado (opcional)",
         noLinkToShortenGeneralError: "Ingrese un enlace para acortar.",
         shortenGeneralError: "Error al acortar el enlace:",
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
+        // ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Analizador de Listas M3U",
         m3uFileLabel: "Seleccione archivo .m3u, .m3u8 o .txt", // Текст кнопки
         m3uCounter: "Encontrado: ",
@@ -791,6 +904,17 @@
         noM3UDataError: "No hay datos para guardar. Cargue y procese un archivo primero.",
         m3uReadError: "Error al leer el archivo: ",
         noChannelsFound: "No se encontraron canales en la lista de reproducción.",
+        // ПЕРЕВОДЫ ДЛЯ РЕДАКТОРА КЛЮЧЕЙ M3U (НОВЫЕ)
+        m3uKeyTitle: "Editor de Claves de Listas M3U",
+        newKeyInputPlaceholder: "Ingrese la nueva clave (ej. A7X7L9J834QK5P)",
+        downloadNewM3UBtn: "Descargar con Nueva Clave",
+        m3uKeyCounter: "Estado: Sin archivo",
+        m3uKeyDragDropText: "Arrastre y suelte el archivo .m3u, .m3u8 o .txt aquí",
+        m3uKeyClickText: "o haga clic para seleccionar archivo",
+        m3uOldKeyDisplay: "", 
+        noKeyEntered: "Ingrese una nueva clave para el reemplazo.",
+        noFileLoaded: "Primero cargue un archivo de lista M3U.",
+        keyReplaceSuccess: "Clave reemplazada con éxito en {count} enlaces."
       },
       uk: { 
         gmailTitle: "Варіації пошти Gmail",
@@ -822,7 +946,7 @@
         qrGenerationError: "Помилка при генерації QR-коду.",
         qrModalTitle: "QR-код для посилання", 
         downloadQrBtn: "Завантажити", 
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
+        // ПЕРЕВОДЫ ДЛЯ ГЕНЕРАТОРА ЛОГИНОВ
         loginGenTitle: "Генератор логінів Gmail",
         countLabel: "Кількість (1-50):",
         lengthLabel: "Довжина логіна (6-20):", 
@@ -834,7 +958,7 @@
         invalidLengthError: "Довжина має бути від 6 до 20 символів.", 
         noLoginsToCopyError: "Немає згенерованих логінів для копіювання.",
         noLoginsToSaveError: "Немає згенерованих логінів для збереження.", 
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
+        // ПЕРЕВОДЫ ДЛЯ УКОРОТИТЕЛЯ
         shortenerTitle: "Укорочувач посилань",
         shortenCustomBtn: "Укоротити",
         copyShortenedBtn: "Скопіювати",
@@ -843,7 +967,7 @@
         customIdInputPlaceholder: "Кастомний ID (опціонально)",
         noLinkToShortenGeneralError: "Введіть посилання для скорочення.",
         shortenGeneralError: "Помилка при скороченні посилання:",
-        // НОВЫЕ ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
+        // ПЕРЕВОДЫ ДЛЯ M3U ПАРСЕРА
         m3uTitle: "Парсер M3U Плейлистів",
         m3uFileLabel: "Оберіть файл .m3u, .m3u8 або .txt", // Текст кнопки
         m3uCounter: "Знайдено: ",
@@ -853,6 +977,17 @@
         noM3UDataError: "Немає даних для збереження. Спершу завантажте та обробіть файл.",
         m3uReadError: "Помилка при читанні файлу: ",
         noChannelsFound: "Канали не знайдено у плейлисті.",
+        // ПЕРЕВОДЫ ДЛЯ РЕДАКТОРА КЛЮЧЕЙ M3U (НОВЫЕ)
+        m3uKeyTitle: "Редактор ключів M3U Плейлистів",
+        newKeyInputPlaceholder: "Введіть новий ключ (наприклад, A7X7L9J834QK5P)",
+        downloadNewM3UBtn: "Завантажити з новим ключом",
+        m3uKeyCounter: "Статус: Немає файлу",
+        m3uKeyDragDropText: "Перетягніть файл .m3u, .m3u8 або .txt сюди",
+        m3uKeyClickText: "або натисніть, щоб обрати файл",
+        m3uOldKeyDisplay: "", 
+        noKeyEntered: "Введіть новий ключ для заміни.",
+        noFileLoaded: "Спершу завантажте файл плейлиста M3U.",
+        keyReplaceSuccess: "Ключ успішно замінено у {count} посиланнях."
       }
     };
 
@@ -923,6 +1058,25 @@
       // Обновление счетчика для M3U
       const currentM3UCount = document.getElementById("m3uOutput").value.split('\n').filter(Boolean).length;
       document.getElementById("m3uCounter").innerText = t.m3uCounter + currentM3UCount;
+
+      // ОБНОВЛЕНИЕ ДЛЯ РЕДАКТОРА КЛЮЧЕЙ M3U (НОВЫЕ)
+      document.getElementById("m3uKeyTitle").innerText = t.m3uKeyTitle;
+      document.getElementById("newKeyInput").placeholder = t.newKeyInputPlaceholder;
+      document.getElementById("downloadNewM3UBtn").innerText = t.downloadNewM3UBtn;
+      // Обновляем текст внутри DropZone
+      document.getElementById("m3uKeyDragDropText").innerText = t.m3uKeyDragDropText;
+      // ОБНОВЛЕНИЕ: Перевод новой строки
+      document.getElementById("m3uKeyClickText").innerText = t.m3uKeyClickText;
+      
+      // ОБНОВЛЕНИЕ: Заголовок для найденного ключа (без префикса)
+      const oldKeyDisplay = document.getElementById("m3uOldKeyDisplay");
+      if (oldKeyDisplay.dataset.key) {
+           // Просто отображаем ключ
+           oldKeyDisplay.innerText = oldKeyDisplay.dataset.key;
+           oldKeyDisplay.style.display = 'block';
+      } else {
+           oldKeyDisplay.style.display = 'none';
+      }
     }
     
     document.addEventListener('DOMContentLoaded', () => {
@@ -1645,6 +1799,158 @@
 
     // ===============================================
     // КОНЕЦ НОВЫХ ФУНКЦИЙ ДЛЯ M3U ПАРСЕРА
+    // ===============================================
+
+    // ===============================================
+    // НОВЫЕ ФУНКЦИИ ДЛЯ РЕДАКТОРА КЛЮЧЕЙ M3U
+    // ===============================================
+    
+    // ИЗМЕНЕНИЕ: Функция updateKeyCounterStatus удалена, так как элемент m3uKeyCounter удален из HTML
+    
+    // Обработчики Drag and Drop
+    function handleDragOver(event) {
+        event.preventDefault(); // Разрешаем сброс
+        // Проверяем, что цель - это div, чтобы избежать конфликтов
+        if (event.currentTarget.id === "m3uKeyDropZone") {
+            event.currentTarget.classList.add("drag-over");
+        }
+    }
+
+    function handleDragLeave(event) {
+        // Проверяем, что цель - это div
+        if (event.currentTarget.id === "m3uKeyDropZone") {
+            event.currentTarget.classList.remove("drag-over");
+        }
+    }
+
+    function handleDrop(event) {
+        event.preventDefault();
+        document.getElementById("m3uKeyDropZone").classList.remove("drag-over");
+
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+            loadM3UFileForEdit(files);
+            // Синхронизируем скрытый input, чтобы он знал, что файл загружен
+            document.getElementById("m3uFileKeyInput").files = files;
+        }
+    }
+    
+    // Загрузка файла для редактирования ключа
+    function loadM3UFileForEdit(files) {
+        const file = files[0];
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        const fileNameDisplay = document.getElementById("m3uFileName");
+        const oldKeyDisplay = document.getElementById("m3uOldKeyDisplay");
+
+        // Сброс предыдущих данных
+        m3uKeyFileContent = null;
+        m3uKeyFileName = null;
+        oldKeyDisplay.style.display = 'none';
+        oldKeyDisplay.dataset.key = '';
+        oldKeyDisplay.innerText = '';
+        fileNameDisplay.innerText = "";
+        // ИЗМЕНЕНИЕ: Удалена функция updateKeyCounterStatus();
+
+
+        if (!file) {
+            return; 
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            m3uKeyFileContent = e.target.result;
+            m3uKeyFileName = file.name;
+            fileNameDisplay.innerText = m3uKeyFileName;
+            // ИЗМЕНЕНИЕ: Удалена функция updateKeyCounterStatus(m3uKeyFileName);
+            
+            // НОВАЯ ЛОГИКА: Поиск старого ключа
+            const content = m3uKeyFileContent;
+            // Регулярное выражение для поиска ключа: /iptv/ + [любые символы, кроме слеша] + /
+            const keyRegex = /\/iptv\/([^/]+)\//;
+            const match = content.match(keyRegex);
+            
+            if (match && match[1]) {
+                const oldKey = match[1];
+                oldKeyDisplay.dataset.key = oldKey; // Сохраняем ключ в data-атрибуте
+                // ИЗМЕНЕНИЕ: Отображаем ТОЛЬКО ключ, без префикса
+                oldKeyDisplay.innerText = oldKey;
+                oldKeyDisplay.style.display = 'block';
+            } else {
+                // Если ключ не найден, скрываем поле
+                oldKeyDisplay.dataset.key = '';
+                oldKeyDisplay.innerText = '';
+                oldKeyDisplay.style.display = 'none';
+            }
+        };
+
+        reader.onerror = function() {
+            m3uKeyFileContent = null;
+            m3uKeyFileName = null;
+            fileNameDisplay.innerText = "";
+            oldKeyDisplay.style.display = 'none';
+            oldKeyDisplay.dataset.key = '';
+            // ИЗМЕНЕНИЕ: Удалена функция updateKeyCounterStatus();
+            alert(t.m3uReadError + reader.error.message);
+        };
+
+        reader.readAsText(file);
+    }
+
+    // Функция замены ключа и скачивания (ИСПРАВЛЕНО)
+    function downloadNewM3U() {
+        const newKeyInput = document.getElementById("newKeyInput");
+        const newKey = newKeyInput.value.trim();
+        const lang = document.documentElement.lang || 'uk';
+        const t = translations[lang];
+        // ИЗМЕНЕНИЕ: Удален keyCounter
+        // const keyCounter = document.getElementById("m3uKeyCounter");
+
+        if (!m3uKeyFileContent) {
+            alert(t.noFileLoaded);
+            return;
+        }
+
+        if (!newKey) {
+            alert(t.noKeyEntered);
+            return;
+        }
+
+        // РЕГУЛЯРНОЕ ВЫРАЖЕНИЕ:
+        // Ищет /iptv/ + [любые символы, кроме слеша] + /
+        const keyRegex = /(\/iptv\/)([^/]+)(\/)/g;
+
+        let replacedContent = m3uKeyFileContent.replace(keyRegex, (match, prefix, oldKey, suffix) => {
+             // Возвращаем: /iptv/ + НОВЫЙ КЛЮЧ + /
+             return prefix + newKey + suffix;
+        });
+
+        // Подсчитываем количество замен (сколько раз ключ был найден)
+        const matches = m3uKeyFileContent.match(keyRegex);
+        const replacedCount = matches ? matches.length : 0;
+
+        // Если замен не было, предупреждаем
+        if (replacedCount === 0) {
+            // ИЗМЕНЕНИЕ: Заменено обновление фрейма на alert
+            alert("Помилка: Не знайдено посилань для заміни ключа у форматі '.../iptv/КЛЮЧ/...'");
+            return;
+        }
+        
+        // Формируем имя файла для скачивания
+        const newFileName = m3uKeyFileName ? `edited_${m3uKeyFileName}` : 'new_playlist.m3u';
+        
+        // Скачивание
+        downloadTextFile(newFileName, replacedContent);
+        
+        // Обновление статуса (теперь через alert)
+        showToast(t.keyReplaceSuccess.replace("{count}", replacedCount));
+
+        // Очищаем поле ввода ключа после успешного скачивания
+        // newKeyInput.value = ""; // Оставим ключ, если пользователь захочет использовать его снова
+    }
+
+    // ===============================================
+    // КОНЕЦ НОВЫХ ФУНКЦИЙ ДЛЯ РЕДАКТОРА КЛЮЧЕЙ M3U
     // ===============================================
 
   </script>
